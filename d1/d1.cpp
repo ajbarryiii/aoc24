@@ -27,6 +27,7 @@ pair<vector<int>, vector<int>> parse_file (string filename) {
 		++which_vec;
 	}
 	file.close();
+	return result;
 }
 
 int compare_lists(pair<vector<int>,vector<int>> input) {
