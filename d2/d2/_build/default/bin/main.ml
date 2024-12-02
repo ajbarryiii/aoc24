@@ -35,19 +35,17 @@ let parsed_line_dampener line =
         match parsed_line line with 
         | 1 -> 1
         | 0 -> (
-                let rec dampener front back omitted= 
+                let rec dampener front back = 
                         match back with
                         | hd :: tail -> (
-                                        match parsed_line ( front @ (omitted :: tail) ) with 
-                                        | 0 -> dampener (front @ [omitted]) tail hd
+                                match parsed_line ( front @ tail ) with 
+                                        | 0 -> dampener (front @ [hd]) tail
                                         | 1 -> 1
                                         | _ -> 2000
                                         )
                         | [] -> parsed_line front
                 in
-                match line with
-                | hd :: tl -> dampener [] tl hd
-                | _ ->  2000)
+                dampener [] line)
         | _ -> 2000
 
 let () = 
