@@ -1,0 +1,6 @@
+# dune init executable d1
+# OCAMLPARAM: unset
+# Shared cache: disabled
+# Shared cache location: /Users/ajbarry/.cache/dune/db
+# Workspace root: /Users/ajbarry/aoc24/d1
+# Auto-detected concurrency: 10

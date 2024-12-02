@@ -1,0 +1,4 @@
+(executable
+ (name d1)
+ (modules d1)
+ (libraries base stdio))
