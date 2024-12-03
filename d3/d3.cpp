@@ -67,9 +67,7 @@ pair< string , int> get_segment( string file , int acc) {
 	int segment_result = get_muls(file.substr(begin, i-begin));
 	if (i>= file.size()) {
 		return pair<string,int>("", acc + segment_result);
-		cout << "segment result: " << segment_result<< '\n';
 	}
-	cout << "segment result: " << segment_result<< '\n';
 	pair< string , int> result(file.substr(i), acc + segment_result);
 	return result;
 }	
@@ -80,7 +78,6 @@ int get_mul_p2 ( string file) {
 	while ( i < file.size()) {
 		if (file[i] == 'd') {
 			if (file.substr(i, 7) == "don't()") {
-				cout << "dont at: " << i<< "\n";
 				i += 7;
 				break;
 			}
@@ -91,8 +88,6 @@ int get_mul_p2 ( string file) {
 		}
 	}
 	int acc = get_muls(file.substr(0, i));
-	cout << acc << '\n';
-	cout << file.substr(0, i) << '\n';
 
 	string next = file.substr(i);
 
