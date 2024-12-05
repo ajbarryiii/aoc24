@@ -1,4 +1,3 @@
-
 #include <iostream> 
 #include <fstream> 
 #include <sstream>
@@ -42,16 +41,12 @@ pair<vector<vector<int>>, unordered_map<int, unordered_set<int>>> parse_file (st
 	return pair<vector<vector<int>>, unordered_map<int, unordered_set<int>>>(update, rules);
 }
 
-int get_result( pair<vector<vector<int>>, unordered_map<int, unordered_set<int>>> input) {
+int get_result(pair<vector<vector<int>>, unordered_map<int, unordered_set<int>>> input) {
 	vector<vector<int>> updates = input.first;
 	unordered_map<int, unordered_set<int>> rules = input.second;
 	int result = 0;
-	int line_no = 0;
 
 	for(auto update : updates) {
-		if (update.size() % 2 == 0) {
-			cout << "update at line " << line_no << "has even length\n";
-		}
 		bool valid = true;
 		for (int i = 0; i < update.size(); ++ i ){
 			const int& curr = update[i]; 
@@ -69,14 +64,46 @@ int get_result( pair<vector<vector<int>>, unordered_map<int, unordered_set<int>>
 		if (valid) {
 			int mid = (update.size() / 2);
 			result += update[mid];
-			//cout << "line " << line_no << "is valid, adding " << update[mid] << '\n';
 		}
-		++line_no;
 	}
 	return result;
 }
 
 
+int get_result_p2 (pair<vector<vector<int>>, unordered_map<int, unordered_set<int>>> input) {
+	vector<vector<int>> updates = input.first;
+	unordered_map<int, unordered_set<int>> rules = input.second;
+	int result = 0;
+	int line_no = 0;
+
+	for(auto update : updates) {
+		bool valid = true;
+		int i = 0;
+		while (i < update.size()){
+			if (rules.find(update[i]) != rules.end()) {
+				int j = update.size()-1;
+				// idea: we only need the middle value to be correct, can this save us computation?
+				while (j>i) {
+					if (rules[update[i]].find(update[j]) != rules[update[i]].end()) {
+						valid = false;
+						swap(update[i], update[j]);
+					}
+					else {
+						--j;
+					}
+				}
+			}
+			++i;
+		}
+		
+		if (!valid) {
+			int mid = (update.size() / 2);
+			result += update[mid];
+		}
+		++line_no;
+	}
+	return result;
+}
 
 int main() {
 	string filename;
@@ -85,9 +112,9 @@ int main() {
 	filename +=".txt";
 	pair<vector<vector<int>>, unordered_map<int, unordered_set<int>>> lines = parse_file(filename);
 	int result = get_result(lines);
-	//int result2 = get_result_2(lines);
+	int result2 = get_result_p2(lines);
 	cout << "Result 1: " << result << '\n';
-	//cout << "Result 2: " << result2 << '\n';
+	cout << "Result 2: " << result2 << '\n';
 	return 0;
 }
 
