@@ -1,9 +1,9 @@
-
 #include <iostream> 
 #include <fstream> 
 #include <string> 
 #include <vector> 
 #include <unordered_set>
+#include <unordered_map>
 
 using namespace std;
 // Custom hash function for std::pair<int, int>
@@ -81,6 +81,52 @@ int get_result(pair<pair<int,int>, vector<vector<bool>>> input) {
 	return visited.size();
 }
 
+int get_result_p2(pair<pair<int,int>, vector<vector<bool>>> input) {
+	vector<vector<bool>> map = input.second;
+	int i = input.first.first, j = input.first.second;
+	unordered_map<pair<int, int>, unordered_set<pair<int, int>, pair_hash>, pair_hash> visited;
+	unordered_set<pair<int,int>, pair_hash> obstacles;
+	int dir = 1;
+	int dy = -1, dx = 0;
+	visited[input.first].insert(pair<int,int>(dy, dx));
+
+	while (0<=i+dy && i+dy<map.size() && 0<=j+dx && j+dy<= map[0].size()) {
+		if (map[i+dy][j+dx]) {
+			//cout << "obstacle found at: " << i+dy << " , " << j+dx<< '\n';
+			++dir;
+			swap(dy,dx);
+			if (dir % 2 == 0) {
+				dy *= -1;
+				dx *= -1;
+			}
+			//cout << "New dy, dx = " << dy << " , " << dx << '\n';
+		}
+		else {
+			//++dir;
+			//swap(dy,dx);
+			//if (dir % 2 == 0) {
+			//	dy *= -1;
+			//	dx *= -1;
+			//}
+			i+=dy;
+			j+=dx;
+			pair<int,int> curr(i,j);
+			if (visited.find(curr) != visited.end()){
+				int next_dir = dir + 1;
+				int dy_h = dx, dx_h = dy;
+				if (next_dir%2 == 0) {
+					dy_h *= -1;
+					dx_h *= -1;
+				}
+				if (visited[curr].find(pair<int,int>(dy_h, dx_h)) != visited[curr].end()){
+					obstacles.insert(curr);
+				}
+			}
+			visited[curr].insert(pair<int,int>(dy,dx));
+		}
+	}
+	return obstacles.size();
+}
 
 int main() {
 	string filename;
@@ -89,9 +135,9 @@ int main() {
 	filename +=".txt";
 	pair<pair<int,int>, vector<vector<bool>>> lines = parse_file(filename);
 	int result = get_result(lines);
-	//int result2 = get_result_p2(lines);
+	int result2 = get_result_p2(lines);
 	cout << "Result 1: " << result << '\n';
-	//cout << "Result 2: " << result2 << '\n';
+	cout << "Result 2: " << result2 << '\n';
 	return 0;
 }
 
