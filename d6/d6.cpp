@@ -40,6 +40,7 @@ pair<pair<int,int>,vector<vector<bool>>> parse_file (string filename) {
 			}
 			
 		}
+		// see if grid matches expected format
 		if (i>0 && line_vec.size() != map[0].size()) {
 			cout << "line size is not equal to others, line: " << i << '\n';
 		}
@@ -62,12 +63,14 @@ int get_result(pair<pair<int,int>, vector<vector<bool>>> input) {
 
 	while (0<=i+dy && i+dy<map.size() && 0<=j+dx && j+dy<= map[0].size()) {
 		if (map[i+dy][j+dx]) {
+			//cout << "obstacle found at: " << i+dy << " , " << j+dx<< '\n';
 			++dir;
 			swap(dy,dx);
-			if (dir % 2) {
+			if (dir % 2 == 0) {
 				dy *= -1;
 				dx *= -1;
 			}
+			//cout << "New dy, dx = " << dy << " , " << dx << '\n';
 		}
 		else {
 			i+=dy;
