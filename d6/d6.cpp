@@ -75,20 +75,20 @@ int get_result(pair<pair<int,int>, vector<vector<bool>>> input) {
 		else {
 			i+=dy;
 			j+=dx;
-			visited.insert(pair<int,int>(i,j));
+			pair<int,int> curr(i,j);
+			visited.insert(curr);
 		}
 	}
 	return visited.size();
 }
 
-int get_result_p2(pair<pair<int,int>, vector<vector<bool>>> input) {
+unordered_map<pair<int,int>,unordered_set<int>, pair_hash> get_visited(pair<pair<int,int>, vector<vector<bool>>> input) {
 	vector<vector<bool>> map = input.second;
 	int i = input.first.first, j = input.first.second;
-	unordered_map<pair<int, int>, unordered_set<pair<int, int>, pair_hash>, pair_hash> visited;
-	unordered_set<pair<int,int>, pair_hash> obstacles;
+	unordered_map<pair<int,int>,unordered_set<int>, pair_hash> visited;
+	visited[input.first].insert(1);
 	int dir = 1;
 	int dy = -1, dx = 0;
-	visited[input.first].insert(pair<int,int>(dy, dx));
 
 	while (0<=i+dy && i+dy<map.size() && 0<=j+dx && j+dy<= map[0].size()) {
 		if (map[i+dy][j+dx]) {
@@ -102,30 +102,65 @@ int get_result_p2(pair<pair<int,int>, vector<vector<bool>>> input) {
 			//cout << "New dy, dx = " << dy << " , " << dx << '\n';
 		}
 		else {
-			//++dir;
-			//swap(dy,dx);
-			//if (dir % 2 == 0) {
-			//	dy *= -1;
-			//	dx *= -1;
-			//}
 			i+=dy;
 			j+=dx;
 			pair<int,int> curr(i,j);
-			if (visited.find(curr) != visited.end()){
-				int next_dir = dir + 1;
-				int dy_h = dx, dx_h = dy;
-				if (next_dir%2 == 0) {
-					dy_h *= -1;
-					dx_h *= -1;
-				}
-				if (visited[curr].find(pair<int,int>(dy_h, dx_h)) != visited[curr].end()){
-					obstacles.insert(curr);
-				}
-			}
-			visited[curr].insert(pair<int,int>(dy,dx));
+			visited[curr].insert(dir%4);
 		}
 	}
-	return obstacles.size();
+	return visited;
+}
+
+bool is_cycle(vector<vector<bool>> map, pair<int,int> start_coord) {
+	int i = start_coord.first, j = start_coord.second;
+	unordered_map<pair<int,int>,unordered_set<int>, pair_hash> visited;
+	visited[start_coord].insert(1);
+	int dir = 1;
+	int dy = -1, dx = 0;
+
+	while (0<=i+dy && i+dy<map.size() && 0<=j+dx && j+dy<= map[0].size()) {
+		if (map[i+dy][j+dx]) {
+			//cout << "obstacle found at: " << i+dy << " , " << j+dx<< '\n';
+			++dir;
+			swap(dy,dx);
+			if (dir % 2 == 0) {
+				dy *= -1;
+				dx *= -1;
+			}
+			//cout << "New dy, dx = " << dy << " , " << dx << '\n';
+		}
+		else {
+			i+=dy;
+			j+=dx;
+			pair<int,int> curr(i,j);
+			if (visited.find(curr)!= visited.end()) {
+				if (visited[curr].find(dir%4) != visited[curr].end()){
+					return true;
+				}
+			}
+			visited[curr].insert(dir%4);
+		}
+	}
+	return false;
+}
+
+int get_result_p2(pair<pair<int,int>, vector<vector<bool>>> input) {
+	vector<vector<bool>> map = input.second;
+	int i = input.first.first, j = input.first.second;
+	unordered_map<pair<int, int>, unordered_set<int>,pair_hash> visited = get_visited(input);
+	int result = 0;
+
+	for (auto item : visited) {
+		vector<vector<bool>> curr_map = map;
+		curr_map[item.first.first][item.first.second] = true;
+		for (auto dir : item.second) {
+			if (is_cycle(curr_map, input.first)){
+				++result;
+				break;
+			}
+		}
+	}
+	return result;
 }
 
 int main() {
