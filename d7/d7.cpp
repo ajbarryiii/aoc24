@@ -51,7 +51,7 @@ bool dfs( const long &target , const vector<long> &nums) {
 		if (!q.empty()){
 			const int q_len = q.size();
 			for (int j = 0; j < q_len; ++j) {
-				int curr = q.front();
+				long curr = q.front();
 				q.pop_front();
 				if ( (curr * nums[i]) <= target) {
 					q.push_back(curr*nums[i]);
