@@ -5,6 +5,7 @@
 #include <string> 
 #include <vector> 
 #include <deque>
+#include <cassert>
 
 using namespace std;
 
@@ -71,6 +72,39 @@ bool dfs( const long &target , const vector<long> &nums) {
 	return false;
 }
 
+bool dfs2 (const long &target, const vector<long> &nums) {
+	deque<long> q;
+	q.push_back(nums[0]);
+	for ( int i = 1; i<nums.size(); ++i) {
+		if (!q.empty()){
+			const int q_len = q.size();
+			string nums_i_str = to_string(nums[i]);
+			for (int j = 0; j < q_len; ++j) {
+				long curr = q.front();
+				assert (curr > 0);
+				q.pop_front();
+				if ( (curr * nums[i]) <= target) {
+					q.push_back(curr*nums[i]);
+				}
+				if ((curr + nums[i]) <= target) {
+					q.push_back(curr+nums[i]);
+				}
+				if (stol(to_string(curr) + nums_i_str) <= target) {
+					q.push_back(stol(to_string(curr) + nums_i_str));
+				}
+			}
+		}
+		else {
+			return false;
+		}
+	}
+	for (auto i : q) {
+		assert (i > 0);
+		if (i == target) return true;
+	}
+	return false;
+
+}
 
 long get_result( const vector<pair<long,vector<long>>> map ) {
 	long result = 0;
@@ -83,6 +117,17 @@ long get_result( const vector<pair<long,vector<long>>> map ) {
 	return result;
 }
 
+long get_result_p2( const vector<pair<long,vector<long>>> map ) {
+	long result = 0;
+	for( auto line : map ) {
+		bool found = dfs2(line.first , line.second);
+		if (found){
+			result += line.first;
+			assert ( result > 0);
+		}
+	}
+	return result;
+}
 
 int main() {
 	string filename;
@@ -91,8 +136,9 @@ int main() {
 	filename +=".txt";
 	vector<pair<long, vector<long>>> lines = parse_file(filename);
 	long result = get_result(lines);
+	long result2 = get_result_p2(lines);
 	cout << "Result 1: " << result << '\n';
-	//cout << "Result 2: " << result2 << '\n';
+	cout << "Result 2: " << result2 << '\n';
 	return 0;
 }
 
