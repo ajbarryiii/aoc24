@@ -1,7 +1,5 @@
 #include <iostream> 
 #include <fstream> 
-#include <sstream>
-#include <stdexcept>
 #include <string> 
 #include <vector> 
 #include <unordered_map>
@@ -45,11 +43,21 @@ pair<unordered_map<char, vector<pair<int,int>>>,pair<int,int>> parse_file (strin
 // what things can we do to speed up computation.
 // can we easily identify the points which will be ob?
 
-pair<pair<int,int>,pair<int,int>> get_antinodes(pair<int,int> node1, pair<int,int> node2) {
+void get_antinodes(unordered_set<pair<int,int>,pair_hash>& antinodes, pair<int,int> node1, pair<int,int> node2, const int& len, const int& width) {
 	int dy = node1.first - node2.first, dx = node1.second - node2.second;
-	pair<int,int> first_pt( node1.first+dy, node1.second +dx);
-	pair<int,int> second_pt( node2.first-dy, node2.second -dx);
-	return pair<pair<int,int>,pair<int,int>>(first_pt, second_pt);
+	pair<int,int> curr = node1;
+	antinodes.insert(node2);
+	while ( 0<= curr.first + dy && curr.first + dy < len && 0<= curr.second+dx && curr.second + dx < width) {
+		curr.first += dy;
+		curr.second +=dx;
+		antinodes.insert(curr);
+	}
+	curr = node2;
+	while ( 0<= curr.first - dy && curr.first - dy < len && 0<= curr.second-dx && curr.second - dx < width) {
+		curr.first -= dy;
+		curr.second -=dx;
+		antinodes.insert(curr);
+	}
 }
 
 int get_result ( pair<unordered_map<char, vector<pair<int,int>>>,pair<int,int>> input) {
@@ -59,11 +67,9 @@ int get_result ( pair<unordered_map<char, vector<pair<int,int>>>,pair<int,int>> 
 	for (auto antenna : map) {
 		const vector<pair<int,int>> antennas = antenna.second;
 		for(int i = 0; i < antennas.size(); ++i) {
+			antinodes.insert(antennas[i]);
 			for (int j = i+1; j < antennas.size(); ++j){
-				pair<pair<int,int>,pair<int,int>> candidates = get_antinodes(antennas[i], antennas[j]);
-				int c1y = candidates.first.first, c2y = candidates.second.first, c1x = candidates.first.second, c2x = candidates.second.second;
-				if (0 <=c1y && c1y<len && 0<=c1x && c1x < width) antinodes.insert(candidates.first);
-				if (0 <=c2y && c2y<len && 0<=c2x && c2x < width) antinodes.insert(candidates.second);
+				get_antinodes(antinodes, antennas[i], antennas[j], len , width);
 			}
 		}
 	}
