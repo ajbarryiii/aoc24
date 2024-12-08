@@ -1,0 +1,4 @@
+(executable
+ (public_name d7o)
+ (name main)
+ (libraries base stdio))
