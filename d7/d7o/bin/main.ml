@@ -12,41 +12,34 @@ let read_lines filename =
 
 open Base
 
+let process_q (curr: int64) (q: int64 list) (tgt:int64) : int64 list = 
+        let rec aux (queue: int64 list) (acc: int64 list) : int64 list = 
+                match queue with
+                | hd:: tl -> (
+                        let sum_check = Int64.(hd + curr <= tgt) in
+                        let mul_check = Int64.(hd * curr <= tgt) in
+                        match (sum_check, mul_check) with
+                        | (true,true) -> aux tl (Int64.(hd * curr)::Int64.(hd + curr):: acc)
+                        | (true,false)-> aux tl (Int64.(hd + curr)::acc)
+                        | (false, true) -> aux tl (Int64.(hd * curr)::acc)
+                        | (false, false) -> aux tl acc
+                )
+                | [] -> acc
+        in 
+        aux q []
+
+
 let process_line (line: int64 list) : int64 = 
     match line with
-    | hd:: tl -> (
-        let rec level rest q_last tgt acc = 
-            match q_last, acc with 
-            | [],[] -> Int64.zero
-            | _ -> (
-                match rest with 
-                | curr :: [] -> (
-                    match q_last with
-                    | [] -> Int64.zero
-                    | q_acc :: q_rest -> (
-                        let sum_check = Int64.(q_acc + curr <= tgt) in
-                        let mul_check = Int64.(q_acc * curr <= tgt) in
-                        match (sum_check, mul_check) with
-                        | true, _ -> tgt
-                        | _, true -> tgt
-                        | _ -> level q_rest [] tgt []
-                    )
-                )
-                | curr :: back -> (
-                    match q_last with 
-                    | [] -> level back acc tgt []
-                    | q_acc :: q_rest -> (
-                        let sum_check = Int64.(q_acc + curr <= tgt) in
-                        let mul_check = Int64.(q_acc * curr <= tgt) in
-                        match (sum_check, mul_check) with
-                        | (true,true) -> level back q_rest tgt (Int64.(q_acc * curr)::Int64.(q_acc + curr):: acc)
-                        | (true,false)-> level back q_rest tgt (Int64.(q_acc + curr)::acc)
-                        | (false, true) -> level back q_rest tgt (Int64.(q_acc * curr)::acc)
-                        | (false, false) -> level back q_rest tgt acc
-                    )
-                )
-                | _ -> assert false
-            )
+    | hd:: tl -> ( 
+        let level (rest: int64 list) (q_init: int64 list) (tgt: int64) : int64 = 
+                let rec aux (rem: int64 list) (queue: int64 list): int64 list =
+                    match rem with
+                    | curr::[] -> process_q curr queue hd
+                    | curr :: remaining -> aux remaining (process_q curr queue tgt)
+                    | _ -> assert false
+                in
+                List.mem (aux rest q_init tgt) tgt ~equal: Int64.equal
         in
         match tl with 
         | front :: back -> level back [front] hd []
