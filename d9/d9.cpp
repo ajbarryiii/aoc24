@@ -19,8 +19,15 @@ pair<deque<pair<int,int>>, vector<int>> parse_file(string filename) {
 	string line;
 	getline(file, line);
 	for (int i = 0; i < line.size(); ++i) {
-		if (i%2 == 0) files_lens.push_back(pair<int,int> (i/2,static_cast<int>(line[i])));
-		else free_spaces.push_back(static_cast<int>(line[i]));
+		int char_val = line[i] - '0';
+		if (i%2 == 0) {
+			files_lens.push_back(pair<int,int> (i/2,char_val));
+			assert(char_val < 10);
+		}
+		else {
+			assert(char_val < 10);
+			free_spaces.push_back(char_val);
+		}
 	}
 	return pair<deque<pair<int,int>>,vector<int>>(files_lens, free_spaces);
 }
@@ -29,7 +36,7 @@ vector<int> simulate (pair<deque<pair<int,int>>,vector<int>> input) {
 	vector<int> result;
 	deque<pair<int,int>> files = input.first;
 	vector<int> free_spaces = input.second;
-	int i ;
+	int i = 0;
 	while (!files.empty() && i< free_spaces.size()) {
 		pair<int,int> curr_file = files.front();
 		files.pop_front();
@@ -55,7 +62,7 @@ uint64_t get_result(vector<int> output) {
 	uint64_t result = 0;
 	for(uint64_t i = 0; i < output.size(); ++i) {
 		result += output[i]*i;
-		assert(result>0);
+		assert(result>=0);
 	}
 	return result;
 }
