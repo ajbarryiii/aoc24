@@ -35,6 +35,31 @@ vector<vector<char>> parse_file(string filename) {
 	return map;
 }
 
+pair<vector<vector<char>>, unordered_set<char>> parse_file_2(string filename) {
+	ifstream file(filename);
+	vector<vector<char>> map;
+	unordered_set<char> chars;
+
+	assert(file.is_open());
+
+	string line;
+	int i = 0;
+	int line_len = 0;
+	while(getline(file, line)) {
+		vector<char> line_vec;
+		if (i == 0) line_len = line.size();
+		assert(line.size() == line_len);
+		for (int j = 0; j < line_len; ++j){
+			line_vec.push_back(line[j]);
+			chars.insert(line[j]);
+		}
+		map.push_back(line_vec);
+		
+		++i;
+	}
+	return {map,chars};
+}
+
 int bfs(const vector<vector<char>> map){
 	const int len = map.size(), wid = map[0].size();
 	int y = 0, x = 0, result = 0;
@@ -81,6 +106,66 @@ int bfs(const vector<vector<char>> map){
 	return result;
 }
 
+int sides(const vector<vector<char>> map, const unordered_set<char> chars) {
+	const int len = map.size(), wid = map[0].size();
+	int price = 0;
+	for (auto curr_char:chars){
+		int curr_char_edges = 0;
+		int area = 0;
+		unordered_set<int> prev_edges;
+		// get horizontal edges
+		for (int i = 0; i<len;++i) {
+			int j = 0;
+			unordered_set<int> curr_edges;
+			while (j < wid) {
+				if (map[i][j] == curr_char){
+					curr_edges.insert(j);
+					if (!prev_edges.contains(j)){
+						curr_char_edges +=1;
+					}
+				 	while (j<wid && map[i][j] == curr_char) {
+						++j;
+						++area;
+					}
+					curr_edges.insert(j);
+					if (!prev_edges.contains(j)){
+						curr_char_edges +=1;
+					}
+				}
+				while (j< wid && map[i][j] != curr_char) ++j;
+			}
+			prev_edges = curr_edges;
+		}
+		// get vertical edges
+		prev_edges.clear();
+		for (int j = 0; j<wid; ++j){
+			int i = 0;
+			unordered_set<int> curr_edges;
+			while (i < len) {
+				if (map[i][j] == curr_char){
+					curr_edges.insert(i);
+					if (!prev_edges.contains(i)){
+						curr_char_edges +=1;
+					}
+					while (i<len && map[i][j] == curr_char) {
+						++i;
+					}
+					curr_edges.insert(i);
+					if (!prev_edges.contains(i)){
+						curr_char_edges +=1;
+					}
+				}
+				while (i< len && map[i][j] != curr_char) ++i;
+			}
+			prev_edges = curr_edges;
+
+		}
+		price += (curr_char_edges*area);
+		cout << "Curr char: " << curr_char << ", Curr char edges: " << curr_char_edges <<", area: "<< area <<", Total price: " << price << '\n';
+	}
+	return price;
+}
+
 int main() {
 	string filename;
 	cout << "Enter the filename: ";
@@ -96,8 +181,11 @@ int main() {
 	}
 	else {
 		vector<vector<char>> map = parse_file(filename);
+		unordered_set<char> chars = parse_file_2(filename).second;
 		int result1 = bfs(map);
+		int result2 = sides(map, chars);
 		cout<<"Result 1 : " << result1 << '\n';
+		cout<<"Result 2 : " << result2 << '\n';
 	}
 	return 0;
 }
