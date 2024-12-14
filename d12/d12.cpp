@@ -116,51 +116,61 @@ int sides(const unordered_set<pair<int,int>,pair_hash> curr_region, const int mi
 		map[i.first-min_y][i.second-min_x] = true;
 	}
 	int curr_char_edges = 0;
-	unordered_set<int> prev_edges;
+	unordered_set<int> prev_l_edges;
+	unordered_set<int> prev_r_edges;
 	// get horizontal edges
 	for (int i = 0; i<len;++i) {
 		int j = 0;
-		unordered_set<int> curr_edges;
+		unordered_set<int> curr_l_edges;
+		unordered_set<int> curr_r_edges;
 		while (j < wid) {
 			if (map[i][j] == curr_char){
-				curr_edges.insert(j);
-				if (!prev_edges.contains(j)){
+				curr_l_edges.insert(j);
+				if (!prev_l_edges.contains(j)){
 					curr_char_edges +=1;
 				}
 				while (j<wid && map[i][j] == curr_char) {
 					++j;
 				}
-				curr_edges.insert(j);
-				if (!prev_edges.contains(j)){
+				curr_r_edges.insert(j);
+				if (!prev_r_edges.contains(j)){
 					curr_char_edges +=1;
 				}
 			}
-			while (j< wid && map[i][j] != curr_char) ++j;
+			else {
+				while (j< wid && map[i][j] != curr_char) ++j;
+			}
 		}
-		prev_edges = curr_edges;
+		prev_l_edges = curr_l_edges;
+		prev_r_edges = curr_r_edges;
 	}
 	// get vertical edges
-	prev_edges.clear();
+	prev_l_edges.clear();
+	prev_r_edges.clear();
 	for (int j = 0; j<wid; ++j){
 		int i = 0;
-		unordered_set<int> curr_edges;
+		unordered_set<int> curr_l_edges;
+		unordered_set<int> curr_r_edges;
 		while (i < len) {
 			if (map[i][j] == curr_char){
-				curr_edges.insert(i);
-				if (!prev_edges.contains(i)){
+				curr_l_edges.insert(i);
+				if (!prev_l_edges.contains(i)){
 					curr_char_edges +=1;
 				}
 				while (i<len && map[i][j] == curr_char) {
 					++i;
 				}
-				curr_edges.insert(i);
-				if (!prev_edges.contains(i)){
+				curr_r_edges.insert(i);
+				if (!prev_r_edges.contains(i)){
 					curr_char_edges +=1;
 				}
 			}
-			while (i< len && map[i][j] != curr_char) ++i;
+			else{
+				while (i< len && map[i][j] != curr_char) ++i;
+			}
 		}
-		prev_edges = curr_edges;
+		prev_l_edges = curr_l_edges;
+		prev_r_edges = curr_r_edges;
 	}
 	return curr_char_edges;
 }
@@ -170,7 +180,7 @@ int bfs2(const vector<vector<char>> map){
 	int y = 0, x = 0, result = 0;
 	unordered_set<pair<int,int>,pair_hash> visited;
 	vector<pair<int,int>> to_visit;
-	vector<pair<int,int>> dirs = {{1,0}, {-1,0}, {0,1}, {0,-1},{1,1},{-1,1},{1,-1},{-1,-1}};
+	vector<pair<int,int>> dirs = {{1,0}, {-1,0}, {0,1}, {0,-1}};
 	while (visited.size()<(len*wid)) {
 		deque<pair<int,int>> q;
 		q.push_back({y,x});
@@ -208,7 +218,7 @@ int bfs2(const vector<vector<char>> map){
 			}
 		}
 		int region_sides = sides(curr_region, min_y, max_y, min_x, max_x);
-		//cout << "Char : " << curr_char<< " area: " << area << " perimiter: " << perimiter << '\n';
+		//cout << "Char : " << curr_char<< " area: " << area << " region_sides: " << region_sides << '\n';
 		result += (area*region_sides);
 		y = to_visit.back().first, x = to_visit.back().second;
 		to_visit.pop_back();
