@@ -1,5 +1,4 @@
 #include <iostream> 
-#include <unordered_map>
 #include <vector>
 #include <string> 
 #include <cassert>
@@ -112,13 +111,13 @@ pair<pair<vector<vector<char>>,vector<pair<int,int>>>,pair<int,int>> parse_file2
 						line_vec.push_back(']');
 					}
 					else if (line[i]=='@') {
-						start_pos = {line_no,i};
-						line.push_back('@');
-						line.push_back('.');
+						start_pos = {line_no,i*2};
+						line_vec.push_back('@');
+						line_vec.push_back('.');
 					}
 					else {
-						line.push_back(line[i]);
-						line.push_back(line[i]);
+						line_vec.push_back(line[i]);
+						line_vec.push_back(line[i]);
 					}
 				}
 				map.push_back(line_vec);
@@ -146,6 +145,11 @@ vector<vector<char>> simulate2 (pair<pair<vector<vector<char>>,vector<pair<int,i
 	pair<int,int> pos = input.second;
 	vector<vector<char>> map = input.first.first;
 	vector<pair<int,int>> directions = input.first.second;
+	for (auto line: map) { 
+		for (auto character: line) cout <<character;
+		cout <<'\n';
+	}
+	cout << "\n\n\n\n";
 	for (int i = 0; i<directions.size();++i) {
 		int dy = directions[i].first, dx = directions[i].second;
 		if (dy != 0){
@@ -178,11 +182,16 @@ vector<vector<char>> simulate2 (pair<pair<vector<vector<char>>,vector<pair<int,i
 					}
 					else if ( map[curr_coords.first][curr_coords.second]=='[' && map[curr_coords.first+dy][curr_coords.second+dx] == '[') {
 						curr->right  = new CharTree({'[', {curr_coords.first+dy, curr_coords.second+dx}});
+						curr->left  = new CharTree({']', {curr_coords.first+dy, curr_coords.second+dx+1}});
 						q.push_back(curr->right);
+						q.push_back(curr->left);
+						
 					}
 					else if ( map[curr_coords.first][curr_coords.second]==']' && map[curr_coords.first+dy][curr_coords.second+dx] == ']') {
 						curr->right  = new CharTree({']', {curr_coords.first+dy, curr_coords.second+dx}});
+						curr->left  = new CharTree({'[', {curr_coords.first+dy, curr_coords.second+dx-1}});
 						q.push_back(curr->right);
+						q.push_back(curr->left);
 					}
 				}
 			}
@@ -194,45 +203,55 @@ vector<vector<char>> simulate2 (pair<pair<vector<vector<char>>,vector<pair<int,i
 					CharTree* curr = q.front();
 					q.pop_front();
 					points_to_change.push_back(curr->val);
+					char c = points_to_change.back().first;
+					int y = points_to_change.back().second.first, x = points_to_change.back().second.second;
+					cout <<"tree: \t char: " << c << " , y: " << y << ", x: " << x << '\n'; 
 					if (curr->left != nullptr) q.push_back(curr->left);
 					if (curr->right != nullptr) q.push_back(curr->right);
 				}
 				while(!points_to_change.empty()) {
 					char c = points_to_change.back().first;
-					int y = points_to_change.back().second.first, x = points_to_change.back().second.first;
+					int y = points_to_change.back().second.first, x = points_to_change.back().second.second;
+					cout <<"dir up: \t char: " << c << " , y: " << y << ", x: " << x << '\n'; 
 					map[y][x] = '.';
 					map[y+dy][x+dx] = c;
 					points_to_change.pop_back();
 				}
-
+				pos.first += dy;
+				pos.second += dx;
 			}
 		}
 		else {
 			vector<pair<char,pair<int,int>>> points_to_change;
-			points_to_change.push_back({'@',pos});
+			points_to_change.push_back({'@', pos});
 			pair<int,int> curr_coords = pos;
 			bool move = true;
-			while(0<= curr_coords.second+dx && curr_coords.second <map[0].size()){
-				if (map[curr_coords.first][curr_coords.second+dx] == '#') {
+			while(true){
+				if (map[curr_coords.first+dy][curr_coords.second+dx] == '#') {
 					move = false;
 					break;
 				}
-				else if (map[curr_coords.first][curr_coords.second+dx] == '.') {
+				else if (map[curr_coords.first+dy][curr_coords.second+dx] == '.') {
 					break;
 				}
 				else {
-					points_to_change.push_back({map[curr_coords.first][curr_coords.second], curr_coords});
 					curr_coords.second += dx;
+					curr_coords.first+=dy;
+					int y = curr_coords.first, x = curr_coords.second;
+					char c = map[curr_coords.first][curr_coords.second];
+					points_to_change.push_back({c, {y,x}});
 				}
 			}
 			if(move) {
 				while(!points_to_change.empty()) {
 					char c = points_to_change.back().first;
-					int y = points_to_change.back().second.first, x = points_to_change.back().second.first;
-					map[y][x] = '.';
-					map[y+dy][x+dx] = c;
+					int new_y = points_to_change.back().second.first, new_x = points_to_change.back().second.second;
+					map[new_y][new_x] = '.';
+					map[new_y+dy][new_x+dx] = c;
 					points_to_change.pop_back();
 				}
+				pos.first += dy;
+				pos.second += dx;
 			}
 		}
 
@@ -251,7 +270,9 @@ int main() {
 	filename += ".txt";
 	pair<pair<vector<vector<char>>,vector<pair<int,int>>>,pair<int,int>> input = parse_file(filename);
 	vector<vector<char>> final_map = simulate(input);
+	cout << "complete p1 \n";
 	pair<pair<vector<vector<char>>,vector<pair<int,int>>>,pair<int,int>> input2 = parse_file2(filename);
+	cout << "complete parsing flie in p2 \n";
 	vector<vector<char>> final_map2 = simulate2(input2);
 	int result1 = 0; 
 	for (int i = 0; i<final_map.size();++i) {
