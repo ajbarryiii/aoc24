@@ -250,8 +250,9 @@ int main() {
 	cin >> filename;
 	filename += ".txt";
 	pair<pair<vector<vector<char>>,vector<pair<int,int>>>,pair<int,int>> input = parse_file(filename);
-	cout << "Successfully parsed file \n";
 	vector<vector<char>> final_map = simulate(input);
+	pair<pair<vector<vector<char>>,vector<pair<int,int>>>,pair<int,int>> input2 = parse_file2(filename);
+	vector<vector<char>> final_map2 = simulate2(input2);
 	int result1 = 0; 
 	for (int i = 0; i<final_map.size();++i) {
 		for (int j = 0; j < final_map[0].size(); ++j) {
