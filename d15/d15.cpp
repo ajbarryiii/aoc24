@@ -134,88 +134,54 @@ pair<pair<vector<vector<char>>,vector<pair<int,int>>>,pair<int,int>> parse_file2
 	return {{map, moves}, start_pos};
 }
 
-struct CharTree {
-	pair<char,pair<int,int>> val;
-	CharTree *left;
-	CharTree *right;
-	CharTree(pair<char,pair<int,int>> x): val(x), left(nullptr), right(nullptr) {}
-};
-
 vector<vector<char>> simulate2 (pair<pair<vector<vector<char>>,vector<pair<int,int>>>,pair<int,int>> input) {
 	pair<int,int> pos = input.second;
 	vector<vector<char>> map = input.first.first;
 	vector<pair<int,int>> directions = input.first.second;
-	for (auto line: map) { 
-		for (auto character: line) cout <<character;
-		cout <<'\n';
-	}
-	cout << "\n\n\n\n";
+	//for (auto line: map) { 
+	//	for (auto character: line) cout <<character;
+	//	cout <<'\n';
+	//}
+	//cout << "\n\n\n\n";
 	for (int i = 0; i<directions.size();++i) {
 		int dy = directions[i].first, dx = directions[i].second;
 		if (dy != 0){
 			bool move = true;
-			CharTree* tree = new CharTree({map[pos.first][pos.second],pos});
-			deque<CharTree*> q;
-			q.push_back(tree);
-			while (!q.empty()){
-				CharTree* curr = q.front();
-				q.pop_front();
-				pair<int,int> curr_coords = curr->val.second;
-				if (0<=curr_coords.first+dy && curr_coords.first+dy <map.size() &&
-						0<=curr_coords.second+dx && curr_coords.second+dx <map[0].size() 
-						){
-					if (map[curr_coords.first+dy][curr_coords.second+dx]== '#') {
+			vector<vector<pair<char,pair<int,int>>>> points_to_update;
+			points_to_update.push_back(vector<pair<char,pair<int,int>>>({{'@',{pos}}}));
+			while (move){
+				vector<pair<char,pair<int,int>>> back = points_to_update.back();
+				vector<pair<char,pair<int,int>>> next;
+				for (int j = 0; j<back.size();++j) { 
+					pair<int,int> curr = back[j].second;
+					if (map[curr.first+dy][curr.second+dx] == '#') {
 						move = false;
 						break;
 					}
-					else if ( map[curr_coords.first][curr_coords.second]=='[' && map[curr_coords.first+dy][curr_coords.second+dx] == ']') {
-						curr->right  = new CharTree({']', {curr_coords.first+dy, curr_coords.second+dx}});
-						curr->left  = new CharTree({'[', {curr_coords.first+dy, curr_coords.second+dx-1}});
-						q.push_back(curr->right);
-						q.push_back(curr->left);
+					else if (map[curr.first+dy][curr.second+dx] == '[') {
+						next.push_back({map[curr.first+dy][curr.second+dx], {curr.first+dy, curr.second+dx}});
+						next.push_back({map[curr.first+dy][curr.second+dx+1], {curr.first+dy, curr.second+dx+1}});
 					}
-					else if ( map[curr_coords.first][curr_coords.second]==']' && map[curr_coords.first+dy][curr_coords.second+dx] == '[') {
-						curr->right  = new CharTree({'[', {curr_coords.first+dy, curr_coords.second+dx}});
-						curr->left  = new CharTree({']', {curr_coords.first+dy, curr_coords.second+dx+1}});
-						q.push_back(curr->right);
-						q.push_back(curr->left);
-					}
-					else if ( map[curr_coords.first][curr_coords.second]=='[' && map[curr_coords.first+dy][curr_coords.second+dx] == '[') {
-						curr->right  = new CharTree({'[', {curr_coords.first+dy, curr_coords.second+dx}});
-						curr->left  = new CharTree({']', {curr_coords.first+dy, curr_coords.second+dx+1}});
-						q.push_back(curr->right);
-						q.push_back(curr->left);
-						
-					}
-					else if ( map[curr_coords.first][curr_coords.second]==']' && map[curr_coords.first+dy][curr_coords.second+dx] == ']') {
-						curr->right  = new CharTree({']', {curr_coords.first+dy, curr_coords.second+dx}});
-						curr->left  = new CharTree({'[', {curr_coords.first+dy, curr_coords.second+dx-1}});
-						q.push_back(curr->right);
-						q.push_back(curr->left);
+					else if (map[curr.first+dy][curr.second+dx] == ']') {
+						next.push_back({map[curr.first+dy][curr.second+dx], {curr.first+dy, curr.second+dx}});
+						next.push_back({map[curr.first+dy][curr.second+dx-1], {curr.first+dy, curr.second+dx-1}});
 					}
 				}
+				if (next.empty()) {
+					break;
+				}
+				points_to_update.push_back(next);
 			}
 			if (move) {
-				deque<CharTree*> q;
-				vector<pair<char,pair<int,int>>> points_to_change;
-				q.push_back(tree);
-				while (!q.empty()) {
-					CharTree* curr = q.front();
-					q.pop_front();
-					points_to_change.push_back(curr->val);
-					char c = points_to_change.back().first;
-					int y = points_to_change.back().second.first, x = points_to_change.back().second.second;
-					cout <<"tree: \t char: " << c << " , y: " << y << ", x: " << x << '\n'; 
-					if (curr->left != nullptr) q.push_back(curr->left);
-					if (curr->right != nullptr) q.push_back(curr->right);
-				}
-				while(!points_to_change.empty()) {
-					char c = points_to_change.back().first;
-					int y = points_to_change.back().second.first, x = points_to_change.back().second.second;
-					cout <<"dir up: \t char: " << c << " , y: " << y << ", x: " << x << '\n'; 
-					map[y][x] = '.';
-					map[y+dy][x+dx] = c;
-					points_to_change.pop_back();
+				while (!points_to_update.empty()) {
+					vector<pair<char,pair<int,int>>> curr = points_to_update.back();
+					points_to_update.pop_back();
+					for (int j = 0; j<curr.size(); ++j) {
+						char c = curr[j].first;
+						int y = curr[j].second.first, x = curr[j].second.second;
+						map[y][x] = '.';
+						map[y+dy][x+dx] = c;
+					}
 				}
 				pos.first += dy;
 				pos.second += dx;
@@ -255,11 +221,11 @@ vector<vector<char>> simulate2 (pair<pair<vector<vector<char>>,vector<pair<int,i
 			}
 		}
 
-		for (auto line: map) { 
-			for (auto character: line) cout <<character;
-			cout <<'\n';
-		}
-		cout << "\n\n\n\n";
+		//for (auto line: map) { 
+		//	for (auto character: line) cout <<character;
+		//	cout <<'\n';
+		//}
+		//cout << "\n\n\n\n";
 	}
 	return map;
 }
@@ -282,6 +248,15 @@ int main() {
 			}
 		}
 	}
+	int result2 = 0; 
+	for (int i = 0; i<final_map2.size();++i) {
+		for (int j = 0; j < final_map2[0].size(); ++j) {
+			if (final_map2[i][j] == '[') {
+				result2+= (100*i + j);
+			}
+		}
+	}
 	cout << "Result 1: " << result1 << '\n';
+	cout << "Result 2: " << result2 << '\n';
 	return 0;
 }
