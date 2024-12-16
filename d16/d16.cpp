@@ -66,15 +66,15 @@ int maze_score (pair<pair<vector<vector<char>>,unordered_map<pair<int,int>,pair<
 	pair<int,int> end_pos = input.second.second;
 	// do we need the dir in the heap?
 	priority_queue<pair<int,pair<pair<int,int>,vector<int>>>,vector<pair<int,pair<pair<int,int>,vector<int>>>>, Compare> heap;
-	heap.push({0,{start_pos,{-1,0}}});
-	distances[start_pos] = {0,{-1,0}};
+	heap.push({0,{start_pos,{0,1}}});
+	distances[start_pos] = {0,{0,1}};
 	// use rotation matrices for computation of next;
 	while (!heap.empty()) { 
 		pair<int,pair<pair<int,int>,vector<int>>> curr = heap.top();
 		int dist = curr.first;
 		vector<int> dir = curr.second.second;
 		pair<int,int> pos = curr.second.first;
-		
+		heap.pop();
 		if (!visited.contains(pos)) {
 			visited.insert(pos);
 		}
@@ -96,7 +96,7 @@ int maze_score (pair<pair<vector<vector<char>>,unordered_map<pair<int,int>,pair<
 		if (map[pos.first+right90[0]][pos.second+right90[1]] != '#'){
 			if ( distances[{pos.first+right90[0],pos.second+right90[1]}].first > dist+1001) { // should this line be >=?
 				distances[{pos.first+right90[0],pos.second+right90[1]}] = {dist+1001, right90};
-				heap.push({dist+1, {{pos.first+right90[0],pos.second+right90[1]}, right90}});
+				heap.push({dist+1001, {{pos.first+right90[0],pos.second+right90[1]}, right90}});
 			}
 		}
 	}
