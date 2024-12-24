@@ -54,24 +54,6 @@ pair<vector<string>,pair<unordered_map<int, unordered_set<string>>,int>> parse_f
 	return {tests,{subsequences, max_len_subsequence}};
 }
 
-//NOTE: use memorization to store sequences that we have found are possible?
-//what if we get all unique lengths of the strings, and build them up.
-//THIS WAS A BAD IDEA,
-
-void compute_subs (unordered_map<int, unordered_set<string>>& input_set ,int max_size){
-	assert(max_size>1);
-	for (int i = 1; i<=max_size; ++i) {
-		for (int j = 1; j<i; ++j) {
-			for (auto setj: input_set[j]) {
-				for (auto seti_j: input_set[i-j]) {
-					input_set[i].insert(setj+seti_j);
-
-				}
-			}
-		}
-	}
-}
-
 //NOTE: maybe use two pointer approach to update, with stack.
 
 int get_result ( pair<vector<string>,pair<unordered_map<int, unordered_set<string>>,int>> input) {
@@ -80,7 +62,6 @@ int get_result ( pair<vector<string>,pair<unordered_map<int, unordered_set<strin
 	deque<int> valid_ids;
 	unordered_map<int, unordered_set<string>> input_set = input.second.first;
 	int max_size = input.second.second;
-	//compute_subs(input_set, max_size); //NOTE: re-add this maybe?
 	for(auto test: tests){
 		int left = 0, right = 0;
 		bool valid = true;
@@ -89,6 +70,7 @@ int get_result ( pair<vector<string>,pair<unordered_map<int, unordered_set<strin
 			if (input_set[right-left].contains(curr)) {
 				valid_ids.push_back(right);
 				if (right == test.size()-1) {
+					cout << "string: \"" <<test<< "\" is valid \n";
 					result++;
 					break;
 				}
@@ -112,6 +94,45 @@ int get_result ( pair<vector<string>,pair<unordered_map<int, unordered_set<strin
 	return result;
 }
 
+// dfs traversal
+int get_score(string s, unordered_map<int, unordered_set<string>> input_set, const int max_size) {
+	int result = 0;
+	vector<string> stack; // postfix stack
+	stack.push_back(s);
+	while(!stack.empty()) {
+		string curr = stack.back();
+		if (curr.size() <= max_size) {
+			if (input_set[curr.size()].contains(curr)) {
+				++result;
+			}
+		}
+		stack.pop_back();
+		int right = 1;
+		while(right<curr.size() && right<=max_size) {
+			string curr_substr = curr.substr(0,right);
+			if (input_set[right].contains(curr_substr)) {
+				stack.push_back(curr.substr(right));
+			}
+			++right;
+		}
+	}
+	return result;
+}
+
+int get_result_p2 ( pair<vector<string>,pair<unordered_map<int, unordered_set<string>>,int>> input) {
+	int result = 0;
+	vector<string> tests = input.first;
+	unordered_map<int, unordered_set<string>> input_set = input.second.first;
+	int max_size = input.second.second;
+	for (int i = 0; i<tests.size(); ++i) {
+		int score = get_score( tests[i], input_set, max_size);
+		result += score;
+		cout << "The score for string : \"" << tests[i] << "\" is : " << score << '\n';
+	}
+	return result;
+}
+
+
 int main() {
 	string filename;
 	cout << "Enter the filename:\n";
@@ -120,5 +141,7 @@ int main() {
 	pair<vector<string>,pair<unordered_map<int, unordered_set<string>>,int>> input = parse_file(filename);
 	int result1 = get_result(input);
 	cout << "Result 1: " << result1 << '\n';
+	int result2 = get_result_p2(input);
+	cout << "Result 2: " << result2 << '\n';
 	return 0;
 }
