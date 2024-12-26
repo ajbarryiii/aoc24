@@ -7,6 +7,7 @@
 #include <cassert>
 #include <unordered_map>
 #include <unordered_set>
+#include <algorithm>
 #include <deque>
 
 using namespace std;
@@ -117,16 +118,37 @@ int get_score ( string s, unordered_map<int, unordered_set<string>> input_set, c
 	return visited[s];
 }
 
-int get_result_p2 (pair<vector<string>,pair<unordered_map<int, unordered_set<string>>,int>> input) {
-	int result = 0; 
+long get_score_dp ( string s, unordered_map<int, unordered_set<string>> input_set, const int max_size){ //, unordered_map<string,int>& visited) {
+	vector<long> dp(s.size()+1,0);
+	string acc;
+	int left = 0, right = 1;
+	dp[0]=1;
+	for (int i=1; i<=dp.size(); ++i) {
+		for (int j=1; j<=min(i,max_size);++j) {
+			if (i-j>=0) {
+				string sub = s.substr(i-j,j);
+				if (input_set[j].contains(sub)) {
+					dp[i]+=dp[i-j];
+				}
+			}
+		}
+	}
+	return dp.back();
+}
+
+long get_result_p2 (pair<vector<string>,pair<unordered_map<int, unordered_set<string>>,int>> input) {
+	long result = 0; 
 	vector<string> tests = input.first;
 	unordered_map<int, unordered_set<string>> input_set = input.second.first;
 	int max_size = input.second.second;
 	for (auto str:tests) {
-		result += get_score(str,input_set,max_size);
+		long score = get_score_dp(str,input_set,max_size);
+		assert(score>=0);
+		result += score;
 	}
 	return result;
 }
+
 
 int main() {
 	string filename;
@@ -135,7 +157,7 @@ int main() {
 	filename += ".txt";
 	pair<vector<string>,pair<unordered_map<int, unordered_set<string>>,int>> input = parse_file(filename);
 	int result1 = get_result(input);
-	int result2 = get_result_p2(input);
+	long result2 = get_result_p2(input);
 	cout << "Result 1: " << result1 << '\n';
 	cout << "TEST P2: " << result2 << "\n";
 	return 0;
