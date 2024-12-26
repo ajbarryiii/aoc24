@@ -70,7 +70,6 @@ int get_result ( pair<vector<string>,pair<unordered_map<int, unordered_set<strin
 			if (input_set[right-left].contains(curr)) {
 				valid_ids.push_back(right);
 				if (right == test.size()-1) {
-					cout << "string: \"" <<test<< "\" is valid \n";
 					result++;
 					break;
 				}
@@ -94,44 +93,40 @@ int get_result ( pair<vector<string>,pair<unordered_map<int, unordered_set<strin
 	return result;
 }
 
-// dfs traversal
-int get_score(string s, unordered_map<int, unordered_set<string>> input_set, const int max_size) {
-	int result = 0;
-	vector<string> stack; // postfix stack
-	stack.push_back(s);
-	while(!stack.empty()) {
-		string curr = stack.back();
-		if (curr.size() <= max_size) {
-			if (input_set[curr.size()].contains(curr)) {
-				++result;
+// what if we use a bfs instead?
+int get_score ( string s, unordered_map<int, unordered_set<string>> input_set, const int max_size){ //, unordered_map<string,int>& visited) {
+	deque<pair<string,string>> q; //(prefix, postfix stack);
+	unordered_map<string,int> visited;
+	q.push_back({s,""});
+	while (!q.empty()) {
+		string post = q.front().second;
+		string prev = q.front().first;
+		q.pop_front();
+		int left = 1;
+		string acc;
+		while (!prev.empty() && left<=max_size) {
+			acc = prev.back()+acc;
+			prev.pop_back();
+			if (input_set[left].contains(acc)){
+				q.push_back({prev, acc+post});
+				visited[acc+post]++;
 			}
-		}
-		stack.pop_back();
-		int right = 1;
-		while(right<curr.size() && right<=max_size) {
-			string curr_substr = curr.substr(0,right);
-			if (input_set[right].contains(curr_substr)) {
-				stack.push_back(curr.substr(right));
-			}
-			++right;
+			++left;
 		}
 	}
-	return result;
+	return visited[s];
 }
 
-int get_result_p2 ( pair<vector<string>,pair<unordered_map<int, unordered_set<string>>,int>> input) {
-	int result = 0;
+int get_result_p2 (pair<vector<string>,pair<unordered_map<int, unordered_set<string>>,int>> input) {
+	int result = 0; 
 	vector<string> tests = input.first;
 	unordered_map<int, unordered_set<string>> input_set = input.second.first;
 	int max_size = input.second.second;
-	for (int i = 0; i<tests.size(); ++i) {
-		int score = get_score( tests[i], input_set, max_size);
-		result += score;
-		cout << "The score for string : \"" << tests[i] << "\" is : " << score << '\n';
+	for (auto str:tests) {
+		result += get_score(str,input_set,max_size);
 	}
 	return result;
 }
-
 
 int main() {
 	string filename;
@@ -140,8 +135,8 @@ int main() {
 	filename += ".txt";
 	pair<vector<string>,pair<unordered_map<int, unordered_set<string>>,int>> input = parse_file(filename);
 	int result1 = get_result(input);
-	cout << "Result 1: " << result1 << '\n';
 	int result2 = get_result_p2(input);
-	cout << "Result 2: " << result2 << '\n';
+	cout << "Result 1: " << result1 << '\n';
+	cout << "TEST P2: " << result2 << "\n";
 	return 0;
 }
