@@ -55,6 +55,7 @@ struct pair_hash {
 		return hash<T>()(p.first)^hash<U>()(p.second);
 	}
 };
+
 unordered_map<int,int> bfs(pair<vector<vector<bool>>,pair<pair<int,int>,pair<int,int>>> input){
 	const vector<vector<bool>> map = input.first;
 	unordered_map<pair<int,int>,int,pair_hash<int,int>> times; 
@@ -91,6 +92,62 @@ unordered_map<int,int> bfs(pair<vector<vector<bool>>,pair<pair<int,int>,pair<int
 	}
 	return cheat_time_counter;
 }
+unordered_map<int,int> bfs2 (pair<vector<vector<bool>>,pair<pair<int,int>,pair<int,int>>> input){
+	const vector<vector<bool>> map = input.first;
+	unordered_map<pair<int,int>,int,pair_hash<int,int>> times; 
+	unordered_map<int,int> cheat_time_counter;
+	deque<pair<int,int>> q;
+	unordered_map<pair<int,int>,int,pair_hash<int,int>> cheat_set;
+	vector<pair<int,int>> dirs {{-1,0},{0,-1},{1,0},{0,1}};
+	// init cheat set 
+	int steps=0;
+	vector<pair<int,int>> next;
+	vector<pair<int,int>> processing;
+	processing.push_back({0,0});
+	while (steps<20) {
+		for (auto step_i:processing) {
+			for(auto dir:dirs) {
+				if (!cheat_set.contains({step_i.first+dir.first, step_i.second+dir.second})) {
+					cheat_set[{step_i.first+dir.first, step_i.second+dir.second}]=steps+1;
+					next.push_back({step_i.first+dir.first, step_i.second+dir.second});
+				}
+			}
+		}
+		++steps;
+		processing = next;
+	}
+	cout << cheat_set.size() << '\n';
+
+	q.push_back(input.second.first);
+	int t = 0;
+	while (!q.empty()) {
+		int q_size = q.size();
+		for (int i=0; i<q_size;++i) {
+			pair<int,int> curr = q.front();
+			q.pop_front();
+			times[curr] = t;
+			//identify possible cheats
+			for (auto dir:cheat_set){
+				int next_y = curr.first+dir.first.first,next_x = curr.second+dir.first.second;
+				if (times.contains({next_y,next_x})) {
+					if (times[{next_y,next_x}] < t-dir.second) {
+						cheat_time_counter[t-dir.second-times[{next_y,next_x}]]++;
+					}
+				}
+			}
+			//append to the queue
+			for (int dir=0; dir<dirs.size();++dir){
+				int next_y = curr.first+dirs[dir].first, next_x = curr.second+dirs[dir].second;
+				if (map[next_y][next_x] && !times.contains({next_y,next_x})) {
+					q.push_back({next_y,next_x});
+				}
+			}
+		}
+		++t;
+	}
+	return cheat_time_counter;
+}
+
 int main() {
 	string filename;
 	cout << "Enter the filename:\n";
@@ -109,12 +166,21 @@ int main() {
 	//	cout<< '\n';
 	//}
 	unordered_map<int,int> cheat_count = bfs(input);
+	unordered_map<int,int> cheat_count_2 = bfs2(input);
 	int result1 = 0;
 	for (auto cheat: cheat_count) {
 		if (cheat.first>=100) {
 			result1 += cheat.second;
 		}
 	}
+	int result2 = 0;
+	for (auto cheat: cheat_count_2) {
+		//cout << "there are " << cheat.second << " cheats which save " << cheat.first << " picoseconds\n";
+		if (cheat.first>=100) {
+			result2 += cheat.second;
+		}
+	}
 	cout << "result 1: " << result1 << '\n';
+	cout << "result 2: " << result2 << '\n';
 	return 0;
 }
