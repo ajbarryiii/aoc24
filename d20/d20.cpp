@@ -66,10 +66,8 @@ unordered_map<int,int> bfs(pair<vector<vector<bool>>,pair<pair<int,int>,pair<int
 	int t = 0;
 	while (!q.empty()) {
 		int q_size = q.size();
-		cout << q.size() << '\n';
 		for (int i=0; i<q_size;++i) {
 			pair<int,int> curr = q.front();
-			cout << "curr: " << curr.first << ','<<curr.second << '\n';
 			q.pop_front();
 			times[curr] = t;
 			//identify possible cheats
@@ -84,7 +82,6 @@ unordered_map<int,int> bfs(pair<vector<vector<bool>>,pair<pair<int,int>,pair<int
 			//append to the queue
 			for (int dir=0; dir<dirs.size();++dir){
 				int next_y = curr.first+dirs[dir].first, next_x = curr.second+dirs[dir].second;
-				cout << next_y << ',' << next_x << " Map? " << map[next_y][next_x] << '\n';
 				if (map[next_y][next_x] && !times.contains({next_y,next_x})) {
 					q.push_back({next_y,next_x});
 				}
@@ -100,17 +97,17 @@ int main() {
 	cin >> filename;
 	filename+=".txt";
 	pair<vector<vector<bool>>,pair<pair<int,int>,pair<int,int>>> input = parse_file(filename);
-	for (int i=0; i<input.first.size(); ++i) {
-		for (int j=0; j<input.first[0].size(); ++j) {
-			if (input.first[i][j]) {
-				cout << '.';
-			}
-			else {
-				cout << '#';
-			}
-		}
-		cout<< '\n';
-	}
+	//for (int i=0; i<input.first.size(); ++i) {
+	//	for (int j=0; j<input.first[0].size(); ++j) {
+	//		if (input.first[i][j]) {
+	//			cout << '.';
+	//		}
+	//		else {
+	//			cout << '#';
+	//		}
+	//	}
+	//	cout<< '\n';
+	//}
 	unordered_map<int,int> cheat_count = bfs(input);
 	int result1 = 0;
 	for (auto cheat: cheat_count) {
