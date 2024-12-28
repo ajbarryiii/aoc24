@@ -128,31 +128,43 @@ unordered_map<string,string> numpad_next() {
 long get_result (vector<string> codes) {
 	long result=0;
 	unordered_map<string,string> dirs_map = dirpad_next(), nums_map = numpad_next();
+	for (auto key:dirs_map) {
+		cout << "Target: " << key.first[1] << " Curr: " << key.first[0] << " sequence: \"" << key.second << "\"\n";
+	}
+
+	cout << "sequence for \'Av<<\': \""<<dirs_map["Av"] + dirs_map["v<"] + dirs_map[">>"]<<"\"\n";
+	cout << "sequence for \'A<v<\': \""<<dirs_map["A<"] + dirs_map["<v"] + dirs_map["v>"] <<"\"\n";
+
+
 	for (auto code:codes) {
 		long numeric_part = stol(code.substr(0,code.size()-1));
 		long num_moves = 0;
 		code = "A"+code;
 		// dirpad->numpad (ie robot1)
-		string l2 = "A";
+		string l2;
 		for (int i=0;i<code.size()-1;++i){
 			string num_substr = code.substr(i,2);
 			string num_to_dir = nums_map[num_substr];
 			l2+=nums_map[num_substr];
 		}
-		string l3 = "A";
+		cout << "size of l2: " << l2.size() << " L2: \"" << l2<< "\"\n";
+		l2 = "A"+l2;
+		// dirpad->dirpad (ie robot2->robot1)
+		string l3;
 		for (int i=0;i<l2.size()-1;++i){
 			string num_substr = l2.substr(i,2);
 			string num_to_dir = dirs_map[num_substr];
 			l3+=dirs_map[num_substr];
 		}
-		string l4 = "A";
+		cout << "size of l3: " << l3.size() << " L3: \"" << l3<< "\"\n";
+		l3 = "A"+l3;
+		// you->robot2
+		string l4;
 		for (int i=0;i<l3.size()-1;++i){
 			string num_substr = l3.substr(i,2);
 			string num_to_dir = dirs_map[num_substr];
 			l4+=dirs_map[num_substr];
 		}
-		cout << "size of l2: " << l2.size() << " L2: \"" << l2<< "\"\n";
-		cout << "size of l3: " << l3.size() << " L3: \"" << l3<< "\"\n";
 		cout << "size of l4: " << l4.size() << " L4: \"" << l4<< "\"\n";
 		result += numeric_part*num_moves;
 		cout << "Numeric part: "<< numeric_part << ", num moves: " << num_moves << '\n';
