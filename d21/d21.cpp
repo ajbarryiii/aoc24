@@ -1,9 +1,11 @@
+#include <functional>
 #include <string>
 #include <iostream>
 #include <deque>
 #include <unordered_map>
 #include <vector>
 #include <fstream> 
+#include <algorithm>
 #include <cassert>
 
 using namespace std;
@@ -52,7 +54,7 @@ struct Pad {
 unordered_map<string,string> dirpad_next() {
 	// get the shortest sequence of presses that one can have using a dirpad to get to the next dir on another dirpad
 	unordered_map<string,string> next;
-	unordered_map<char,pair<int,int>> dirs = {{'v',{1,0}},{'^',{-1,0}},{'<',{0,-1}},{'>',{0,1}}};
+	unordered_map<char,pair<int,int>> dirs = {{'<',{0,-1}},{'>',{0,1}},{'v',{1,0}},{'^',{-1,0}}};
 	unordered_map<char,pair<int,int>> char_positions = {{'^',{0,1}},{'A',{0,2}},{'<',{1,0}},{'v',{1,1}},{'>',{1,2}}};
 	vector<vector<char>> pad = {{'-','^','A'},{'<','v','>'}};
 	for (auto chars: char_positions) {
@@ -72,8 +74,15 @@ unordered_map<string,string> dirpad_next() {
 						s+=chars.first;
 						s+=pad[next_y][next_x];
 						if (!next.contains((s))) {
-							next[s]=(curr_sequence+dir.first+'A');
-							q.push_back({{next_y,next_x}, curr_sequence+dir.first});
+							string seq = curr_sequence+dir.first;
+							if (pad[next_y][next_x]=='A'||pad[next_y][next_x]=='^') {
+								sort(seq.begin(), seq.end());
+							}
+							else {
+								sort(seq.begin(), seq.end(),greater<char>());
+							}
+							next[s]=(seq+'A');
+							q.push_back({{next_y,next_x}, seq});
 						}
 					}
 				}
@@ -114,8 +123,15 @@ unordered_map<string,string> numpad_next() {
 						s+=chars.first;
 						s+=pad[next_y][next_x];
 						if (!next.contains((s))) {
-							next[s]=(curr_sequence+dir.first+'A');
-							q.push_back({{next_y,next_x}, curr_sequence+dir.first});
+							string seq = curr_sequence+dir.first;
+							if (pad[next_y][next_x]=='A'||pad[next_y][next_x]=='0') {
+								sort(seq.begin(), seq.end());
+							}
+							else {
+								sort(seq.begin(), seq.end(),greater<char>());
+							}
+							next[s]=(seq+'A');
+							q.push_back({{next_y,next_x}, seq});
 						}
 					}
 				}
@@ -128,14 +144,6 @@ unordered_map<string,string> numpad_next() {
 long get_result (vector<string> codes) {
 	long result=0;
 	unordered_map<string,string> dirs_map = dirpad_next(), nums_map = numpad_next();
-	for (auto key:dirs_map) {
-		cout << "Target: " << key.first[1] << " Curr: " << key.first[0] << " sequence: \"" << key.second << "\"\n";
-	}
-
-	cout << "sequence for \'Av<<\': \""<<dirs_map["Av"] + dirs_map["v<"] + dirs_map[">>"]<<"\"\n";
-	cout << "sequence for \'A<v<\': \""<<dirs_map["A<"] + dirs_map["<v"] + dirs_map["v>"] <<"\"\n";
-
-
 	for (auto code:codes) {
 		long numeric_part = stol(code.substr(0,code.size()-1));
 		long num_moves = 0;
@@ -147,7 +155,6 @@ long get_result (vector<string> codes) {
 			string num_to_dir = nums_map[num_substr];
 			l2+=nums_map[num_substr];
 		}
-		cout << "size of l2: " << l2.size() << " L2: \"" << l2<< "\"\n";
 		l2 = "A"+l2;
 		// dirpad->dirpad (ie robot2->robot1)
 		string l3;
@@ -156,7 +163,7 @@ long get_result (vector<string> codes) {
 			string num_to_dir = dirs_map[num_substr];
 			l3+=dirs_map[num_substr];
 		}
-		cout << "size of l3: " << l3.size() << " L3: \"" << l3<< "\"\n";
+		cout << "L3: \"" << l3 << "\"\n";
 		l3 = "A"+l3;
 		// you->robot2
 		string l4;
@@ -165,21 +172,32 @@ long get_result (vector<string> codes) {
 			string num_to_dir = dirs_map[num_substr];
 			l4+=dirs_map[num_substr];
 		}
-		cout << "size of l4: " << l4.size() << " L4: \"" << l4<< "\"\n";
-		result += numeric_part*num_moves;
-		cout << "Numeric part: "<< numeric_part << ", num moves: " << num_moves << '\n';
+		cout << "L4: \"" << l4 << "\"\n";
+		cout << "Numeric part: " << numeric_part << " , Size: " << l4.size() << '\n';
+		result += numeric_part*l4.size();
 	}
 	return result;
 }
 
-void parse_file (string filename) {
+vector<string> parse_file (string filename) {
 	ifstream file(filename);
+	vector<string> out;
 	assert(file.is_open());
+	string line;
+	while (getline(file,line)) {
+		out.push_back(line);
+	}
+	return out;
 }
 
 int main () {
-	vector<string> test = {"029A"};
+	string filename;
+	cout << "Enter the filename:\n";
+	cin >> filename;
+	filename += ".txt";
+	vector<string> test = parse_file(filename);
 	long result1 = get_result(test);
+	cout << "L4: \"" << "<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A" << "\"\n";
 	cout << "Result 1: " << result1 << "\n";
 	return 0;
 }
