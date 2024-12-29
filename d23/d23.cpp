@@ -27,17 +27,21 @@ int get_sets_of_3 (unordered_map<string,unordered_set<string>> map ) {
 	int count=0;
 	for (auto key:map) {
 		//note we need to remove keys from our original key;
-		for (auto relation1:key.second) {
-			for (auto relation2:key.second) {
-				if (relation1!=relation2 && relation1[0]=='t') {
-					//only need to do one check because relations are reciprocal
-					if (map[relation1].contains(relation2)) {
-						//BUG: this seems to double count each relation;
-						//HACK: checking if relation1[0]==t seems to remove the double count issues for the ones we care about;
-						map[relation1].erase(key.first);
-						map[relation2].erase(key.first);
-						count++;
-						//cout << "Group " << count << ": " << key.first << '-' << relation1 << '-' << relation2 << '\n';
+		unordered_set<string> visited;
+		if (key.first[0]=='t') {
+			for (auto relation1:key.second) {
+				visited.insert(relation1);
+				for (auto relation2:key.second) {
+					if (relation1!=relation2 && !visited.contains(relation2)) {
+						//only need to do one check because relations are reciprocal
+						if (map[relation1].contains(relation2)) {
+							//BUG: this seems to double count each relation;
+							//HACK: checking if relation1[0]==t seems to remove the double count issues for the ones we care about;
+							map[relation1].erase(key.first);
+							map[relation2].erase(key.first);
+							count++;
+							//cout << "Group " << count << ": " << key.first << '-' << relation1 << '-' << relation2 << '\n';
+						}
 					}
 				}
 			}
