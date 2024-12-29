@@ -66,11 +66,12 @@ int get_result_p2 (vector<vector<int8_t>> prices_ts) {
 	for (auto prices:prices_ts) {
 		string sequence = "";
 		unordered_set<string> visited;
-		for (int i=1;i<=4;++i) sequence = to_string((prices[i]-prices[i-1]))+",";
-		for (int i=5; i<prices.size();++i) {
+		for (int i=1;i<=4;++i) sequence += to_string((prices[i]-prices[i-1]))+",";
+		for (int i=4; i<prices.size();++i) {
 			// how to handle keys which have already appeared?
 			if (!visited.contains(sequence)) {
-				profits[sequence]+=prices[i];
+				int price_curr = prices[i-1];
+				profits[sequence]+= price_curr;
 				visited.insert(sequence);
 			}
 			sequence = sequence.substr(sequence.find_first_of(',')+1)+to_string((prices[i]-prices[i-1]))+",";
