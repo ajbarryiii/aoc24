@@ -107,6 +107,50 @@ vector<string> find_max_clique (unordered_map<string,unordered_set<string>> map)
 	return result;
 }
 
+string bron_kerbosch (unordered_map<string,unordered_set<string>> map) {
+	vector<vector<unordered_set<string>>> stack;
+	unordered_set<string> max_clique;
+	unordered_set<string> p_init, r_init, x_init;
+	for (auto vertex:map) p_init.insert(vertex.first);
+	stack.push_back({r_init,p_init,x_init});
+	while (!stack.empty()) {
+		vector<unordered_set<string>> curr = stack.back();
+		stack.pop_back();
+		assert(curr.size()==3);
+		unordered_set<string> R=curr[0], P=curr[1], X=curr[2];
+		if (P.empty() && X.empty()) {
+			if (R.size()>max_clique.size()) {
+				max_clique=R;
+			}
+		}
+		for (auto it=P.begin(); it!=P.end(); ) {
+			string v = *it;
+			vector<unordered_set<string>> next;
+			unordered_set<string> next_R = R;
+			next_R.insert(v);
+			next.push_back(next_R);
+			unordered_set<string> next_P, next_X;
+			for (auto neighbor: map[v]) {
+				if (P.contains(neighbor)) next_P.insert(neighbor);
+				if (X.contains(neighbor)) next_X.insert(neighbor);
+			}
+			next.push_back(next_P);
+			next.push_back(next_X);
+			stack.push_back(next);
+			it = P.erase(it);
+			X.insert(v);
+		}
+	}
+	vector<string> result_vec;
+	for (auto vertex:max_clique) result_vec.push_back(vertex);
+	sort(result_vec.begin(),result_vec.end());
+	string result = "";
+	for (int i=0;i<result_vec.size();++i) result+=result_vec[i]+",";
+	result.pop_back();
+	return result;
+}
+
+
 int main () {
 	unordered_map<string,unordered_set<string>> map_test = parse_file("d23t.txt");
 	int count_g3_t = get_sets_of_3(map_test);
@@ -114,11 +158,7 @@ int main () {
 	unordered_map<string,unordered_set<string>> map = parse_file("d23.txt");
 	int result1 = get_sets_of_3(map);
 	cout << "Result 1: " << result1 << '\n';
-	vector<string> testp2 = find_max_clique(map);
-	cout << "testp2: ";
-	for (int i=0;i<testp2.size();++i) {
-		cout << testp2[i] << ',';
-	}
-	cout << '\n';
+	string result2 = bron_kerbosch(map);
+	cout << "Result 2: " << result2 << '\n';
 	return 0;
 }
