@@ -91,6 +91,82 @@ bool get_bit_i (long num, long i) {
 	return bit_i;
 }
 
+enum Operation {
+	AND,
+	OR,
+	XOR,
+	PRESET_T,
+	PRESET_F
+};
+
+struct TreeNode {
+	string out;
+	Operation operation;
+	TreeNode* right_input;
+	TreeNode* left_input;
+	TreeNode(string out, Operation op): out(out), operation(op), right_input(nullptr), left_input(nullptr) {};
+	TreeNode(string out, Operation op, TreeNode* right_input, TreeNode* left_input): out(out), operation(op), right_input(right_input), left_input(left_input) {};
+	bool get_value () const {
+		if (operation == Operation::PRESET_F) {
+			return false;
+		}
+		else if (operation == Operation::PRESET_T) {
+			return true;
+		}
+		else if (operation == Operation::XOR) {
+			return right_input->get_value() ^ left_input->get_value();
+		}
+		else if (operation == Operation::AND) {
+			return right_input->get_value() && left_input->get_value();
+		}
+		else if (operation == Operation::OR) {
+			return right_input->get_value() || left_input->get_value();
+		}
+		else {
+			cout << "unrecognized operation";
+			assert(false);
+		}
+	}
+};
+
+pair<unordered_map<string,TreeNode>, deque<vector<string>>> parse_file_p2 (string filename) {
+	unordered_map<string,TreeNode> map;
+	ifstream file(filename);
+	assert(file.is_open());
+	string line;
+	while (getline(file,line)) {
+		if (line.empty()) {
+			break;
+		}
+		string key = line.substr(0,line.find_first_of(':'));
+		int value = stoi(line.substr(line.find_first_of(':')+1));
+		map[key] = (value==0) ? TreeNode(key, PRESET_F):TreeNode(key,PRESET_T);
+	}
+
+	deque<vector<string>> ops;
+	regex pattern("(\\w+)\\s+(\\w+)\\s+(\\w+)\\s+->\\s+(\\w+)");
+	while (getline(file,line)) {
+		smatch match;
+		vector<string> curr(4);
+		regex_search(line, match, pattern);
+		curr[0] = match[1];
+		curr[1] = match[3];
+		curr[2] = match[4];
+		curr[3] = match[2];
+		//each queue element will be structured [first, second, out, operation]
+		ops.push_back(curr);
+	}
+	return {map,ops};
+}
+
+void swap_trees (unordered_map<string,TreeNode> &map, string key1, string key2) {
+	swap(map[key1], map[key2]);
+	map[key1].out = key1;
+	map[key2].out = key2;
+}
+
+
+
 // tactic: find a precursor tree for each item 'z<num>' which is not valid.
 // another approach is to use a backtracking approach? start with z's which are incorrect, and 
 // what data structure can we use for the precursor set?
@@ -131,6 +207,7 @@ bool p2 (pair<unordered_map<string,bool>, deque<vector<string>>> input) {
 	}
 	return false;
 }
+
 
 bool verify (unordered_map<string,bool> map) {
 	bool result = true;
