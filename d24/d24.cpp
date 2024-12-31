@@ -70,6 +70,7 @@ unordered_map<string,bool> get_result_map (pair<unordered_map<string,bool>, dequ
 	}
 	return map;
 }
+
 long get_result (pair<unordered_map<string,bool>, deque<vector<string>>> input) {
 	unordered_map<string,bool> map = get_result_map(input);
 	long result = 0;
@@ -77,8 +78,7 @@ long get_result (pair<unordered_map<string,bool>, deque<vector<string>>> input) 
 		if (key.first[0]=='z') {
 			long idx = stol(key.first.substr(1));
 			if (key.second) {
-				long init = 1;
-				result += (init<<idx);
+				result += (1L<<idx);
 			}
 		}
 		assert (result>=0);
@@ -86,37 +86,49 @@ long get_result (pair<unordered_map<string,bool>, deque<vector<string>>> input) 
 	return result;
 }
 
-int get_bit_i (long num, long i) {
-	long one = 1;
-	return (num >> i) & one;
+bool get_bit_i (long num, long i) {
+	bool bit_i = (num >> i) & 1L; 
+	return bit_i;
 }
 
 // tactic: find a precursor tree for each item 'z<num>' which is not valid.
 // another approach is to use a backtracking approach? start with z's which are incorrect, and 
 // what data structure can we use for the precursor set?
 bool p2 (pair<unordered_map<string,bool>, deque<vector<string>>> input) {
-	unordered_map<string,bool> map = input.first;
+	deque<vector<string>> q = input.second;
+	unordered_map<string,bool> map = get_result_map(input);
 	long x = 0;
 	long y = 0;
 	for (auto key: map) {
 		if (key.first[0]=='x') {
 			long idx = stol(key.first.substr(1));
 			if (key.second) {
-				long init = 1;
-				x += (init<<idx);
+				x += (1L<<idx);
 				assert (x>=0);
 			}
 		}
 		else if (key.first[0]=='y') {
 			long idx = stol(key.first.substr(1));
 			if (key.second) {
-				long init = 1;
-				y += (init<<idx);
+				y += (1L<<idx);
 				assert (y>=0);
 			}
 		}
 	}
 	long z = x+y;
+	//init correct_z;
+	unordered_map<string,bool> correct_z;
+	for (long i=0;i<sizeof(z)*8; ++i) {
+		string key_z = "z";
+		string numeric_part = to_string(i);
+		if (numeric_part.size()==1) {
+			key_z += "0"+numeric_part;
+		}
+		else {
+			key_z += numeric_part;
+		}
+		correct_z[key_z] = get_bit_i(z, i);
+	}
 	return false;
 }
 
