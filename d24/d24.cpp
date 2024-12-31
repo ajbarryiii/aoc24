@@ -175,9 +175,11 @@ bool p2 (pair<unordered_map<string,bool>, deque<vector<string>>> input) {
 	unordered_map<string,bool> map = get_result_map(input);
 	long x = 0;
 	long y = 0;
+	long max_idx = 0;
 	for (auto key: map) {
 		if (key.first[0]=='x') {
 			long idx = stol(key.first.substr(1));
+			if (idx>max_idx) max_idx = idx;
 			if (key.second) {
 				x += (1L<<idx);
 				assert (x>=0);
@@ -185,6 +187,7 @@ bool p2 (pair<unordered_map<string,bool>, deque<vector<string>>> input) {
 		}
 		else if (key.first[0]=='y') {
 			long idx = stol(key.first.substr(1));
+			if (idx>max_idx) max_idx = idx;
 			if (key.second) {
 				y += (1L<<idx);
 				assert (y>=0);
@@ -194,7 +197,7 @@ bool p2 (pair<unordered_map<string,bool>, deque<vector<string>>> input) {
 	long z = x+y;
 	//init correct_z;
 	unordered_map<string,bool> correct_z;
-	for (long i=0;i<sizeof(z)*8; ++i) {
+	for (long i=0;i<=max_idx+1; ++i) {
 		string key_z = "z";
 		string numeric_part = to_string(i);
 		if (numeric_part.size()==1) {
