@@ -5,8 +5,8 @@
 #include <vector>
 #include <regex>
 #include <deque>
-#include <bitset>
 #include <unordered_map>
+#include <unordered_set>
 
 using namespace std;
 
@@ -23,6 +23,7 @@ pair<unordered_map<string,bool>, deque<vector<string>>> parse_file (string filen
 		int value = stoi(line.substr(line.find_first_of(':')+1));
 		map[key] = (value==0) ? false:true;
 	}
+
 	deque<vector<string>> ops;
 	regex pattern("(\\w+)\\s+(\\w+)\\s+(\\w+)\\s+->\\s+(\\w+)");
 	while (getline(file,line)) {
@@ -41,7 +42,7 @@ pair<unordered_map<string,bool>, deque<vector<string>>> parse_file (string filen
 
 // idea: use a deque to order ops, if op is not valid, move to back of the queue
 
-long get_result (pair<unordered_map<string,bool>, deque<vector<string>>> input) {
+unordered_map<string,bool> get_result_map (pair<unordered_map<string,bool>, deque<vector<string>>> input) {
 	unordered_map<string,bool> map = input.first;
 	deque<vector<string>> q = input.second;
 	while(!q.empty()) {
@@ -67,6 +68,10 @@ long get_result (pair<unordered_map<string,bool>, deque<vector<string>>> input) 
 			q.push_back(curr);
 		}
 	}
+	return map;
+}
+long get_result (pair<unordered_map<string,bool>, deque<vector<string>>> input) {
+	unordered_map<string,bool> map = get_result_map(input);
 	long result = 0;
 	for (auto key: map) {
 		if (key.first[0]=='z') {
@@ -77,6 +82,55 @@ long get_result (pair<unordered_map<string,bool>, deque<vector<string>>> input) 
 			}
 		}
 		assert (result>=0);
+	}
+	return result;
+}
+
+int get_bit_i (long num, long i) {
+	long one = 1;
+	return (num >> i) & one;
+}
+
+// tactic: find a precursor tree for each item 'z<num>' which is not valid.
+// another approach is to use a backtracking approach? start with z's which are incorrect, and 
+// what data structure can we use for the precursor set?
+bool p2 (pair<unordered_map<string,bool>, deque<vector<string>>> input) {
+	unordered_map<string,bool> map = input.first;
+	long x = 0;
+	long y = 0;
+	for (auto key: map) {
+		if (key.first[0]=='x') {
+			long idx = stol(key.first.substr(1));
+			if (key.second) {
+				long init = 1;
+				x += (init<<idx);
+				assert (x>=0);
+			}
+		}
+		else if (key.first[0]=='y') {
+			long idx = stol(key.first.substr(1));
+			if (key.second) {
+				long init = 1;
+				y += (init<<idx);
+				assert (y>=0);
+			}
+		}
+	}
+	long z = x+y;
+	return false;
+}
+
+bool verify (unordered_map<string,bool> map) {
+	bool result = true;
+	for (auto key: map) {
+		if (key.first[0] == 'z') {
+			string x_key = "x"+key.first.substr(1);
+			string y_key = "y"+key.first.substr(1);
+			if (map[key.first]!=(map[x_key] && map[y_key])) {
+				cout << key.first << " is not correct";
+				result = false;
+			}
+		}
 	}
 	return result;
 }
