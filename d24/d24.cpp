@@ -221,7 +221,7 @@ void swap_trees (unordered_map<string,TreeNode> &map, string key1, string key2) 
 // tactic: find a precursor tree for each item 'z<num>' which is not valid.
 // another approach is to use a backtracking approach? start with z's which are incorrect, and 
 // what data structure can we use for the precursor set?
-void p2 (pair<unordered_map<string,TreeNode>, deque<vector<string>>> input) {
+vector<string> p2 (pair<unordered_map<string,TreeNode>, deque<vector<string>>> input) {
 	unordered_map<string,TreeNode> map = input.first;
 	long x = 0;
 	long y = 0;
@@ -253,7 +253,24 @@ void p2 (pair<unordered_map<string,TreeNode>, deque<vector<string>>> input) {
 	unordered_map<string,TreeNode> tree_map = get_result_tree_map(input);
 	//dfs to try and find the answer
 	vector<pair<pair<int,vector<string>>,pair<unordered_map<string,TreeNode>,unordered_set<string>>>> stack;// <<idx_z,num_swaps>,<map,not_to_swap_set>>
-	//TODO: init stack;
+	for (auto i:tree_map) {
+		if ((i.first!="z00") && i.second.get_value()==correct_z[0]) {
+			if (i.first!="z00") {
+				unordered_map<string,TreeNode> next_map = tree_map;
+				swap_trees(next_map, i.first, "z00");
+				unordered_set<string> next_not_to_swap = next_map["z00"].get_components_subset();
+				vector<string> next_swaps = {"z00", i.first};
+				stack.push_back({{1,next_swaps},{next_map,next_not_to_swap}});
+			}
+			else {
+				unordered_map<string,TreeNode> next_map = tree_map;
+				unordered_set<string> next_not_to_swap = next_map["z00"].get_components_subset();
+				vector<string> next_swaps;
+				stack.push_back({{1,next_swaps},{next_map,next_not_to_swap}});
+			}
+		}
+	}
+	cout << "stack size after initialization: " << stack.size() << '\n';
 	while(!stack.empty()) {
 		pair<pair<int,vector<string>>,pair<unordered_map<string,TreeNode>,unordered_set<string>>> curr = stack.back();
 		int idx = curr.first.first; 
@@ -266,11 +283,16 @@ void p2 (pair<unordered_map<string,TreeNode>, deque<vector<string>>> input) {
 		z_str+=to_string(idx);
 		//BUG: this only handles cases where the idx to be swapped is with the z string;
 		if (correct_z[idx]==map[z_str].get_value()) {
-			unordered_set<string> next_not_to_swap = map[z_str].get_components_subset();
-			copy(curr_not_to_swap.begin(),curr_not_to_swap.end(), inserter(next_not_to_swap,next_not_to_swap.end()));
-			stack.push_back({{idx+1,swaps},{curr_map, next_not_to_swap}});
+			if (idx==max_idx+1 && swaps.size()==8) {
+				return swaps;
+			}
+			else {
+				unordered_set<string> next_not_to_swap = map[z_str].get_components_subset();
+				copy(curr_not_to_swap.begin(),curr_not_to_swap.end(), inserter(next_not_to_swap,next_not_to_swap.end()));
+				stack.push_back({{idx+1,swaps},{curr_map, next_not_to_swap}});
+			}
 		}
-		else {
+		else if (swaps.size()<=6) { // case of correct_z[idx] being incorrect
 			for (auto key: curr_map) {
 				if (!curr_not_to_swap.contains(key.first) && key.first!=z_str) {
 					if (correct_z[idx]==key.second.get_value()) {
@@ -286,14 +308,22 @@ void p2 (pair<unordered_map<string,TreeNode>, deque<vector<string>>> input) {
 				}
 			}
 		}
-		//TODO: handle termination case;
 	}
+	cout << "result not found with this approach\n";
+	vector<string> void_vect;
+	return void_vect;
 }
 
 int main () {
 	pair<unordered_map<string,bool>, deque<vector<string>>> input = parse_file("d24.txt");
 	long result1 = get_result(input);
 	cout << "Result 1: " << result1 << '\n';
+	pair<unordered_map<string,TreeNode>, deque<vector<string>>> input_2 = parse_file_p2("d24.txt");
+	cout << "file parsed successfully for p2\n";
+	vector<string> swaps = p2(input_2);
+	for (auto i: swaps) {
+		cout << i << ',';
+	}
 	return 0;
 }
 
