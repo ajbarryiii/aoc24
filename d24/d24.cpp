@@ -264,6 +264,7 @@ void p2 (pair<unordered_map<string,TreeNode>, deque<vector<string>>> input) {
 		string z_str = "z";
 		if (idx<10) z_str+="0";
 		z_str+=to_string(idx);
+		//BUG: this only handles cases where the idx to be swapped is with the z string;
 		if (correct_z[idx]==map[z_str].get_value()) {
 			unordered_set<string> next_not_to_swap = map[z_str].get_components_subset();
 			copy(curr_not_to_swap.begin(),curr_not_to_swap.end(), inserter(next_not_to_swap,next_not_to_swap.end()));
@@ -271,32 +272,22 @@ void p2 (pair<unordered_map<string,TreeNode>, deque<vector<string>>> input) {
 		}
 		else {
 			for (auto key: curr_map) {
-				if (!curr_not_to_swap.contains(key.first)) {
+				if (!curr_not_to_swap.contains(key.first) && key.first!=z_str) {
 					if (correct_z[idx]==key.second.get_value()) {
 						unordered_map<string,TreeNode> next_map = curr_map;
 						swap_trees(next_map, key.first, z_str);
-						unordered_set<string> next_not_to_swap = map[z_str].get_components_subset();
+						unordered_set<string> next_not_to_swap = next_map[z_str].get_components_subset();
 						copy(curr_not_to_swap.begin(),curr_not_to_swap.end(), inserter(next_not_to_swap,next_not_to_swap.end()));
+						vector<string> next_swaps = swaps;
+						next_swaps.push_back(key.first);
+						next_swaps.push_back(z_str);
+						stack.push_back({{idx+1,next_swaps},{next_map,next_not_to_swap}});
 					}
 				}
 			}
 		}
+		//TODO: handle termination case;
 	}
-}
-
-bool verify (unordered_map<string,bool> map) {
-	bool result = true;
-	for (auto key: map) {
-		if (key.first[0] == 'z') {
-			string x_key = "x"+key.first.substr(1);
-			string y_key = "y"+key.first.substr(1);
-			if (map[key.first]!=(map[x_key] && map[y_key])) {
-				cout << key.first << " is not correct";
-				result = false;
-			}
-		}
-	}
-	return result;
 }
 
 int main () {
