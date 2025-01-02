@@ -162,7 +162,12 @@ pair<unordered_map<string,TreeNode>, deque<vector<string>>> parse_file_p2 (strin
 		}
 		string key = line.substr(0,line.find_first_of(':'));
 		int value = stoi(line.substr(line.find_first_of(':')+1));
-		map[key] = (value==0) ? TreeNode(key, PRESET_F):TreeNode(key,PRESET_T);
+		if (value==0){
+			map.insert({key,TreeNode(key, Operation::PRESET_F)});
+		}
+		else {
+			map.insert({key,TreeNode(key, Operation::PRESET_T)});
+		}
 	}
 
 	deque<vector<string>> ops;
@@ -190,13 +195,13 @@ unordered_map<string,TreeNode> get_result_tree_map (pair<unordered_map<string,Tr
 		if (map.contains(curr[0]) && map.contains(curr[1])) {
 			string op = curr[3];
 			if (op == "AND") {
-				map[curr[2]] = TreeNode(curr[2], Operation::AND , &map[curr[0]], &map[curr[1]]);
+				map.insert({curr[2],TreeNode(curr[2], Operation::AND , &map.at(curr[0]), &map.at(curr[1]))});
 			}
 			else if (op == "OR") {
-				map[curr[2]] = TreeNode(curr[2], Operation::OR , &map[curr[0]], &map[curr[1]]);
+				map.insert({curr[2],TreeNode(curr[2], Operation::XOR , &map.at(curr[0]), &map.at(curr[1]))});
 			}
 			else if (op == "XOR") {
-				map[curr[2]] = TreeNode(curr[2], Operation::XOR , &map[curr[0]], &map[curr[1]]);
+				map.insert({curr[2],TreeNode(curr[2], Operation::XOR , &map.at(curr[0]), &map.at(curr[1]))});
 			}
 			else {
 				cout << "Unrecognized operation: " << op << '\n';
@@ -211,9 +216,9 @@ unordered_map<string,TreeNode> get_result_tree_map (pair<unordered_map<string,Tr
 }
 
 void swap_trees (unordered_map<string,TreeNode> &map, string key1, string key2) {
-	swap(map[key1], map[key2]);
-	map[key1].out = key1;
-	map[key2].out = key2;
+	swap(map.at(key1), map.at(key2));
+	map.at(key1).out = key1;
+	map.at(key2).out = key2;
 }
 
 
@@ -250,6 +255,10 @@ vector<string> p2 (pair<unordered_map<string,TreeNode>, deque<vector<string>>> i
 	for (long i=0;i<=max_idx+1; ++i) {
 		correct_z[i] = get_bit_i(z, i);
 	}
+	string z_max_idx = "z"+to_string(max_idx+1);
+	if (!map.contains(z_max_idx)) {
+		map.insert({z_max_idx,TreeNode(z_max_idx, Operation::PRESET_F)});
+	}
 	unordered_map<string,TreeNode> tree_map = get_result_tree_map(input);
 	//dfs to try and find the answer
 	vector<pair<pair<int,vector<string>>,pair<unordered_map<string,TreeNode>,unordered_set<string>>>> stack;// <<idx_z,num_swaps>,<map,not_to_swap_set>>
@@ -258,13 +267,13 @@ vector<string> p2 (pair<unordered_map<string,TreeNode>, deque<vector<string>>> i
 			if (i.first!="z00") {
 				unordered_map<string,TreeNode> next_map = tree_map;
 				swap_trees(next_map, i.first, "z00");
-				unordered_set<string> next_not_to_swap = next_map["z00"].get_components_subset();
+				unordered_set<string> next_not_to_swap = next_map.at("z00").get_components_subset();
 				vector<string> next_swaps = {"z00", i.first};
 				stack.push_back({{1,next_swaps},{next_map,next_not_to_swap}});
 			}
 			else {
 				unordered_map<string,TreeNode> next_map = tree_map;
-				unordered_set<string> next_not_to_swap = next_map["z00"].get_components_subset();
+				unordered_set<string> next_not_to_swap = next_map.at("z00").get_components_subset();
 				vector<string> next_swaps;
 				stack.push_back({{1,next_swaps},{next_map,next_not_to_swap}});
 			}
@@ -282,12 +291,12 @@ vector<string> p2 (pair<unordered_map<string,TreeNode>, deque<vector<string>>> i
 		if (idx<10) z_str+="0";
 		z_str+=to_string(idx);
 		//BUG: this only handles cases where the idx to be swapped is with the z string;
-		if (correct_z[idx]==map[z_str].get_value()) {
+		if (correct_z[idx]==curr_map.at(z_str).get_value()) {
 			if (idx==max_idx+1 && swaps.size()==8) {
 				return swaps;
 			}
 			else {
-				unordered_set<string> next_not_to_swap = map[z_str].get_components_subset();
+				unordered_set<string> next_not_to_swap = curr_map.at(z_str).get_components_subset();
 				copy(curr_not_to_swap.begin(),curr_not_to_swap.end(), inserter(next_not_to_swap,next_not_to_swap.end()));
 				stack.push_back({{idx+1,swaps},{curr_map, next_not_to_swap}});
 			}
@@ -298,7 +307,7 @@ vector<string> p2 (pair<unordered_map<string,TreeNode>, deque<vector<string>>> i
 					if (correct_z[idx]==key.second.get_value()) {
 						unordered_map<string,TreeNode> next_map = curr_map;
 						swap_trees(next_map, key.first, z_str);
-						unordered_set<string> next_not_to_swap = next_map[z_str].get_components_subset();
+						unordered_set<string> next_not_to_swap = next_map.at(z_str).get_components_subset();
 						copy(curr_not_to_swap.begin(),curr_not_to_swap.end(), inserter(next_not_to_swap,next_not_to_swap.end()));
 						vector<string> next_swaps = swaps;
 						next_swaps.push_back(key.first);
