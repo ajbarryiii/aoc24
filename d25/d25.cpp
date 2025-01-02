@@ -74,9 +74,9 @@ int get_result (const pair<vector<array<int,5>>,vector<array<int,5>>> input) {
 }
 
 int main () {
-	pair<vector<array<int,5>>,vector<array<int,5>>> keys_locks_test = parse_file("d25t.txt");
-	vector<array<int,5>> keys = keys_locks_test.first, locks = keys_locks_test.second;
-	int result1 = get_result(keys_locks_test);
+	pair<vector<array<int,5>>,vector<array<int,5>>> keys_locks = parse_file("d25.txt");
+	vector<array<int,5>> keys = keys_locks.first, locks = keys_locks.second;
+	int result1 = get_result(keys_locks);
 	cout << "Result 1: " << result1<<'\n';
 	return 0;
 }
