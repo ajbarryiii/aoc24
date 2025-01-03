@@ -196,6 +196,45 @@ long get_result (vector<string> codes, vector<array<int,4>> priority_vec) {
 	return result;
 }
 
+long get_result_p2 (vector<string> codes,int num_robots, vector<array<int,4>> priority_vec) {
+	long result=0;
+	unordered_map<string,string> dirs_map = dirpad_next(priority_vec[0]), nums_map = numpad_next(priority_vec[1]);
+	for (auto code:codes) {
+		long numeric_part = stol(code.substr(0,code.size()-1));
+		long num_moves = 0;
+		code = "A"+code;
+		// numpad->dirpad (ie robot1)
+		string l2;
+		for (int i=0;i<code.size()-1;++i){
+			string num_substr = code.substr(i,2);
+			string num_to_dir = nums_map[num_substr];
+			l2+=nums_map[num_substr];
+		}
+		string l3;
+		for (int i=0;i<num_robots-1;++i){
+			l2 = "A"+l2;
+			for(int j=0;j<l2.size();++j) {
+				string num_substr = l2.substr(j,2);
+				string num_to_dir = dirs_map[num_substr];
+				l3+=dirs_map[num_substr];
+			}
+			l2=l3;
+			l3.clear();
+			cout << "completed level " << i <<" , current size: " << l2.size()<< '\n';
+		}
+		l2 = "A"+l2;
+		// you->robot2
+		string l4;
+		for (int i=0;i<l2.size()-1;++i){
+			string num_substr = l2.substr(i,2);
+			string num_to_dir = dirs_map[num_substr];
+			l4+=dirs_map[num_substr];
+		}
+		result += numeric_part*l4.size();
+	}
+	return result;
+}
+
 vector<string> parse_file (string filename) {
 	ifstream file(filename);
 	vector<string> out;
@@ -238,11 +277,10 @@ int main () {
 	filename += ".txt";
 	vector<string> test = parse_file(filename);
 	vector<vector<array<int,4>>> valid_orders = valid_orderings(test);
-	//cout << "L4: \"" << "<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A" << "\"\n";
 	cout << "valid orders size: " << valid_orders.size() << "\n";
 	vector<array<int,4>> ordering = valid_orders[0];
 	vector<string> p1 = parse_file("d21.txt");
-	long result1 = get_result(p1, ordering);
+	long result1 = get_result_p2(p1,25, ordering);
 	cout << "result p1: " << result1;
 	return 0;
 }
