@@ -62,7 +62,7 @@ void sort_chars (string &s, array<int,4> priority_vec) {
 
 //what if we hardcode the shortest way to get to each character from each other character?;
 //note we probably dont actually need the history;
-unordered_map<string,string> dirpad_next(array<int,4> priority_vec1, array<int,4> priority_vec2) {
+unordered_map<string,string> dirpad_next(array<int,4> priority_vec) {
 	// get the shortest sequence of presses that one can have using a dirpad to get to the next dir on another dirpad
 	unordered_map<string,string> next;
 	unordered_map<char,pair<int,int>> dirs = {{'<',{0,-1}},{'>',{0,1}},{'v',{1,0}},{'^',{-1,0}}};
@@ -86,11 +86,14 @@ unordered_map<string,string> dirpad_next(array<int,4> priority_vec1, array<int,4
 						s+=pad[next_y][next_x];
 						if (!next.contains((s))) {
 							string seq = curr_sequence+dir.first;
-							if (pad[next_y][next_x]=='A'||pad[next_y][next_x]=='^') {
-								sort_chars(seq,priority_vec1);
+							if ((pad[next_y][next_x]=='A'||pad[next_y][next_x]=='^') && (chars.first=='<')) {
+								sort(seq.begin(),seq.end());
+							}
+							else if ((chars.first=='A'||chars.first)&&(pad[next_y][next_x]=='<')){
+								sort(seq.rbegin(),seq.rend());
 							}
 							else {
-								sort_chars(seq, priority_vec2);
+								sort_chars(seq, priority_vec);
 							}
 							next[s]=(seq+'A');
 							q.push_back({{next_y,next_x}, seq});
@@ -103,7 +106,7 @@ unordered_map<string,string> dirpad_next(array<int,4> priority_vec1, array<int,4
 	return next;
 }
 
-unordered_map<string,string> numpad_next(array<int,4> priority_vec1, array<int,4> priority_vec2) {
+unordered_map<string,string> numpad_next(array<int,4> priority_vec) {
 	// get the shortest sequence of presses that one can have using a dirpad to get to the next dir on another dirpad
 	unordered_map<string,string> next;
 	unordered_map<char,pair<int,int>> dirs = {{'v',{1,0}},{'^',{-1,0}},{'<',{0,-1}},{'>',{0,1}}};
@@ -135,11 +138,14 @@ unordered_map<string,string> numpad_next(array<int,4> priority_vec1, array<int,4
 						s+=pad[next_y][next_x];
 						if (!next.contains((s))) {
 							string seq = curr_sequence+dir.first;
-							if (pad[next_y][next_x]=='A'||pad[next_y][next_x]=='0') {
-								sort_chars(seq,priority_vec1);
+							if ((pad[next_y][next_x]=='A'||pad[next_y][next_x]=='0')&&(chars.first=='1'||chars.first=='4'||chars.first=='7')) {
+								sort(seq.begin(),seq.end());
+							}
+							else if ((pad[next_y][next_x]=='1'||pad[next_y][next_x]=='4'||pad[next_y][next_x]=='7')&&(chars.first=='A'||chars.first=='0')) {
+								sort(seq.rbegin(),seq.rend());
 							}
 							else {
-								sort_chars(seq,priority_vec2);
+								sort_chars(seq,  priority_vec);
 							}
 							next[s]=(seq+'A');
 							q.push_back({{next_y,next_x}, seq});
@@ -154,7 +160,7 @@ unordered_map<string,string> numpad_next(array<int,4> priority_vec1, array<int,4
 
 long get_result (vector<string> codes, vector<array<int,4>> priority_vec) {
 	long result=0;
-	unordered_map<string,string> dirs_map = dirpad_next(priority_vec[0],priority_vec[1]), nums_map = numpad_next(priority_vec[2],priority_vec[3]);
+	unordered_map<string,string> dirs_map = dirpad_next(priority_vec[0]), nums_map = numpad_next(priority_vec[1]);
 	for (auto code:codes) {
 		long numeric_part = stol(code.substr(0,code.size()-1));
 		long num_moves = 0;
@@ -215,13 +221,9 @@ vector<vector<array<int,4>>> valid_orderings(vector<string> test) {
 	vector<vector<array<int,4>>> valid_orders;
 	for (int i=0;i<orderings.size();++i) {
 		for (int j=0;j<orderings.size();++j) {
-			for (int k=0; k<orderings.size();++k) {
-				for (int l=0;l<orderings.size();++l) {
-					vector<array<int,4>> valid_ordering = {orderings[i],orderings[j],orderings[k],orderings[l]};
-					if (get_result(test, valid_ordering)==126384) {
-						valid_orders.push_back(valid_ordering);
-					}
-				}
+			vector<array<int,4>> valid_ordering = {orderings[i],orderings[j]};
+			if (get_result(test, valid_ordering)==126384) {
+				valid_orders.push_back(valid_ordering);
 			}
 		}
 	}
@@ -237,18 +239,10 @@ int main () {
 	vector<string> test = parse_file(filename);
 	vector<vector<array<int,4>>> valid_orders = valid_orderings(test);
 	//cout << "L4: \"" << "<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A" << "\"\n";
-	cout << "Result 1: " << valid_orders.size() << "\n";
-	if (valid_orders.size()>0) {
-		for (int i=0;i<valid_orders.size();++i) {
-			cout << "{\n";
-			for (int j=0;j<valid_orders[i].size();++j) {
-				cout << "(";
-				for (int k=0;k<valid_orders[i][j].size();++k) {
-					cout <<valid_orders[i][j][k] << ',';
-				}
-				cout << "),";
-			}
-		}
-	}
+	cout << "valid orders size: " << valid_orders.size() << "\n";
+	vector<array<int,4>> ordering = valid_orders[0];
+	vector<string> p1 = parse_file("d21.txt");
+	long result1 = get_result(p1, ordering);
+	cout << "result p1: " << result1;
 	return 0;
 }
