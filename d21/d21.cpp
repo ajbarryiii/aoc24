@@ -213,7 +213,7 @@ long get_result_p2 (vector<string> codes,int num_robots, vector<array<int,4>> pr
 		string l3;
 		for (int i=0;i<num_robots-1;++i){
 			l2 = "A"+l2;
-			for(int j=0;j<l2.size();++j) {
+			for(long j=0;j<l2.size();++j) {
 				string num_substr = l2.substr(j,2);
 				string num_to_dir = dirs_map[num_substr];
 				l3+=dirs_map[num_substr];
@@ -225,7 +225,7 @@ long get_result_p2 (vector<string> codes,int num_robots, vector<array<int,4>> pr
 		l2 = "A"+l2;
 		// you->robot2
 		string l4;
-		for (int i=0;i<l2.size()-1;++i){
+		for (long i=0;i<l2.size()-1;++i){
 			string num_substr = l2.substr(i,2);
 			string num_to_dir = dirs_map[num_substr];
 			l4+=dirs_map[num_substr];
