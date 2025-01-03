@@ -1,9 +1,11 @@
 #include <functional>
+#include <array>
+#include <istream>
+#include <queue>
 #include <string>
 #include <iostream>
 #include <deque>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 #include <fstream> 
 #include <algorithm>
@@ -11,11 +13,58 @@
 
 using namespace std;
 
+enum class PadType {
+	NUMPAD,
+	DIRPAD
+};
+
+struct Pad {
+	PadType pad_t; 
+	vector<vector<char>> pad;
+	int y ;
+	int x ;
+	Pad *child;
+	string history;
+	Pad(PadType type, Pad *child_pad): pad_t(type), child(nullptr) {
+		if (pad_t == PadType::NUMPAD) {
+			pad = {{'7','8','9'},{'4','5','6'},{'1','2','3'},{'-','0','A'}};
+			y = 3;
+			x = 2;
+		}
+		else if (pad_t == PadType::DIRPAD) {
+			pad = {{'-','^','A'},{'<','v','>'}};
+			y = 0;
+			x = 2;
+		}
+	}
+	Pad(PadType type, Pad *child_pad, int y, int x, string history): pad_t(type), child(nullptr), y(y), x(x), history(history) {
+		if (pad_t == PadType::NUMPAD) {
+			pad = {{'7','8','9'},{'4','5','6'},{'1','2','3'},{'-','0','A'}};
+		}
+		else if (pad_t == PadType::DIRPAD) {
+			pad = {{'-','^','A'},{'<','v','>'}};
+		}
+	}
+	bool valid_pos(int y_,int x_) {
+		bool y_valid = (0<=y_ && y_<pad.size());
+		bool x_valid = (0<=x_ && x_<pad[0].size());
+		return ((pad[y_][x_]!= '-') && (y_valid && x_valid));
+	}
+};
+
+void sort_chars (string &s, array<int,4> priority_vec) {
+	unordered_map<char,int> priority = {{'<',priority_vec[0]},{'^',priority_vec[1]}, {'v',priority_vec[2]},{'>',priority_vec[3]}};
+	sort(s.begin(),s.end(), 
+			[&priority](char c1, char c2) {
+				return priority[c1]<priority[c2];
+			});
+}
+
 //what if we hardcode the shortest way to get to each character from each other character?;
-//will sorted substrings always have the shortest size in level of abstraction n+1?
-unordered_map<string,unordered_set<string>> dirpad_next() {
+//note we probably dont actually need the history;
+unordered_map<string,string> dirpad_next(array<int,4> priority_vec1, array<int,4> priority_vec2) {
 	// get the shortest sequence of presses that one can have using a dirpad to get to the next dir on another dirpad
-	unordered_map<string,unordered_set<string>> next;
+	unordered_map<string,string> next;
 	unordered_map<char,pair<int,int>> dirs = {{'<',{0,-1}},{'>',{0,1}},{'v',{1,0}},{'^',{-1,0}}};
 	unordered_map<char,pair<int,int>> char_positions = {{'^',{0,1}},{'A',{0,2}},{'<',{1,0}},{'v',{1,1}},{'>',{1,2}}};
 	vector<vector<char>> pad = {{'-','^','A'},{'<','v','>'}};
@@ -23,7 +72,7 @@ unordered_map<string,unordered_set<string>> dirpad_next() {
 		deque<pair<pair<int,int>,string>> q;
 		q.push_back({chars.second,""});
 		string itself(2,chars.first);
-		next[itself].insert("A");
+		next[itself] = "A";
 		while (!q.empty()) {
 			pair<int,int> curr = q.front().first;
 			string curr_sequence = q.front().second;
@@ -35,15 +84,15 @@ unordered_map<string,unordered_set<string>> dirpad_next() {
 						string s = "";
 						s+=chars.first;
 						s+=pad[next_y][next_x];
-						string seq = curr_sequence+dir.first;
-						if (next.contains(s)) {
-							if (seq.size()<=(*next[s].begin()).size()-1){
-								next[s].insert(seq+'A');
-								q.push_back({{next_y,next_x}, seq});
+						if (!next.contains((s))) {
+							string seq = curr_sequence+dir.first;
+							if (pad[next_y][next_x]=='A'||pad[next_y][next_x]=='^') {
+								sort_chars(seq,priority_vec1);
 							}
-						}
-						else {
-							next[s].insert(seq+'A');
+							else {
+								sort_chars(seq, priority_vec2);
+							}
+							next[s]=(seq+'A');
 							q.push_back({{next_y,next_x}, seq});
 						}
 					}
@@ -54,9 +103,9 @@ unordered_map<string,unordered_set<string>> dirpad_next() {
 	return next;
 }
 
-unordered_map<string,unordered_set<string>> numpad_next() {
+unordered_map<string,string> numpad_next(array<int,4> priority_vec1, array<int,4> priority_vec2) {
 	// get the shortest sequence of presses that one can have using a dirpad to get to the next dir on another dirpad
-	unordered_map<string,unordered_set<string>> next;
+	unordered_map<string,string> next;
 	unordered_map<char,pair<int,int>> dirs = {{'v',{1,0}},{'^',{-1,0}},{'<',{0,-1}},{'>',{0,1}}};
 	unordered_map<char,pair<int,int>> char_positions;
 	vector<vector<char>> pad = {{'7','8','9'},{'4','5','6'},{'1','2','3'},{'-','0','A'}};
@@ -72,7 +121,7 @@ unordered_map<string,unordered_set<string>> numpad_next() {
 		deque<pair<pair<int,int>,string>> q;
 		q.push_back({chars.second,""});
 		string itself(2,chars.first);
-		next[itself].insert("A");
+		next[itself] = "A";
 		while (!q.empty()) {
 			pair<int,int> curr = q.front().first;
 			string curr_sequence = q.front().second;
@@ -84,15 +133,15 @@ unordered_map<string,unordered_set<string>> numpad_next() {
 						string s = "";
 						s+=chars.first;
 						s+=pad[next_y][next_x];
-						string seq = curr_sequence+dir.first;
-						if (next.contains(s)) {
-							if (seq.size()<= (*next[s].begin()).size()-1) {
-								next[s].insert(seq+'A');
-								q.push_back({{next_y,next_x}, seq});
+						if (!next.contains((s))) {
+							string seq = curr_sequence+dir.first;
+							if (pad[next_y][next_x]=='A'||pad[next_y][next_x]=='0') {
+								sort_chars(seq,priority_vec1);
 							}
-						}
-						else {
-							next[s].insert(seq+'A');
+							else {
+								sort_chars(seq,priority_vec2);
+							}
+							next[s]=(seq+'A');
 							q.push_back({{next_y,next_x}, seq});
 						}
 					}
@@ -103,88 +152,40 @@ unordered_map<string,unordered_set<string>> numpad_next() {
 	return next;
 }
 
-//TODO: for each code, iterate through to find the shortest code which is possible
-//for part 2 we can prune these down to the codes which output the shortest sequence?
-long get_result (vector<string> codes) {
+long get_result (vector<string> codes, vector<array<int,4>> priority_vec) {
 	long result=0;
-	unordered_map<string,unordered_set<string>> dirs_map = dirpad_next(), nums_map = numpad_next();
+	unordered_map<string,string> dirs_map = dirpad_next(priority_vec[0],priority_vec[1]), nums_map = numpad_next(priority_vec[2],priority_vec[3]);
 	for (auto code:codes) {
 		long numeric_part = stol(code.substr(0,code.size()-1));
+		long num_moves = 0;
 		code = "A"+code;
-		// num -> dir
-		unordered_set<string> code_i_sequences;
-		//init code_i_sequences
-		for (auto out_sequence:nums_map[code.substr(0,2)]) {
-			code_i_sequences.insert(out_sequence);
+		// dirpad->numpad (ie robot1)
+		string l2;
+		for (int i=0;i<code.size()-1;++i){
+			string num_substr = code.substr(i,2);
+			string num_to_dir = nums_map[num_substr];
+			l2+=nums_map[num_substr];
 		}
-		for (int i=1;i<code.size()-1;++i) {
-			string curr_substr = code.substr(i,2);
-			auto it = code_i_sequences.begin();
-			unordered_set<string> out_sequences;
-			for (auto partial_sequence:code_i_sequences) {
-				for (auto out_sequence:nums_map[curr_substr]){
-					out_sequences.insert(partial_sequence+out_sequence);
-				}
-			}
-			code_i_sequences = out_sequences;
+		l2 = "A"+l2;
+		// dirpad->dirpad (ie robot2->robot1)
+		string l3;
+		for (int i=0;i<l2.size()-1;++i){
+			string num_substr = l2.substr(i,2);
+			string num_to_dir = dirs_map[num_substr];
+			l3+=dirs_map[num_substr];
 		}
-		cout << "door->dir complete," << code_i_sequences.size()<<"\n";
-		// dir->dir
-		unordered_set<string> dir_to_dir;
-		//init door_to_dir
-		for (auto door_to_dir:code_i_sequences) {
-			string curr_sequence = "A";
-			curr_sequence+=door_to_dir[0];
-			for (auto next: dirs_map[curr_sequence]) {
-				dir_to_dir.insert(next);
-			}
+		//cout << "L3: \"" << l3 << "\"\n";
+		l3 = "A"+l3;
+		// you->robot2
+		string l4;
+		for (int i=0;i<l3.size()-1;++i){
+			string num_substr = l3.substr(i,2);
+			string num_to_dir = dirs_map[num_substr];
+			l4+=dirs_map[num_substr];
 		}
-		for (auto d_to_d: code_i_sequences) {
-			for (int i=1;i<d_to_d.size()-1;++i) {
-				string curr_substr = d_to_d.substr(i,2);
-				unordered_set<string> out_sequences;
-				for (auto partial_sequence:dir_to_dir) {
-					for (auto out_sequence:dirs_map[curr_substr]){
-						out_sequences.insert(partial_sequence+out_sequence);
-					}
-				}
-				dir_to_dir = out_sequences;
-			}
-		}
-		code_i_sequences = dir_to_dir;
-		cout << "dir->dir complete," << code_i_sequences.size()<<"\n";
-		dir_to_dir.clear();
-		for (auto door_to_dir:code_i_sequences) {
-			string curr_sequence = "A";
-			curr_sequence+=door_to_dir[0];
-			for (auto next: dirs_map[curr_sequence]) {
-				dir_to_dir.insert(next);
-			}
-		}
-		for (auto d_to_d: code_i_sequences) {
-			for (int i=1;i<d_to_d.size()-1;++i) {
-				string curr_substr = d_to_d.substr(i,2);
-				unordered_set<string> out_sequences;
-				for (auto partial_sequence:dir_to_dir) {
-					for (auto out_sequence:dirs_map[curr_substr]){
-						out_sequences.insert(partial_sequence+out_sequence);
-					}
-				}
-				dir_to_dir = out_sequences;
-			}
-		}
-		code_i_sequences = dir_to_dir;
-		cout << "dir->human complete," << code_i_sequences.size()<<"\n";
-		long min_len_sequence_size = 10000000;
-		string min_len_sequence = "";
-		for (auto i:code_i_sequences) {
-			if (i.size()<min_len_sequence_size) {
-				min_len_sequence = i;
-				min_len_sequence_size = i.size();
-			}
-		}
-		cout << min_len_sequence << ": size: " << min_len_sequence.size() << '\n';
-		result+=(min_len_sequence_size*numeric_part);
+		//cout << "L4: \"" << l4 << "\"\n";
+		//cout << "Numeric part: " << numeric_part << " , Size: " << l4.size() << '\n';
+		result += numeric_part*l4.size();
 	}
 	return result;
 }
@@ -200,13 +201,54 @@ vector<string> parse_file (string filename) {
 	return out;
 }
 
+vector<array<int,4>> generate_ordering () {
+	vector<array<int,4>> result;
+	array<int,4> p = {0,1,2,3};
+	do {
+		result.push_back(p);
+	} while (next_permutation(p.begin(),p.end()));
+	return result;
+}
+
+vector<vector<array<int,4>>> valid_orderings(vector<string> test) {
+	vector<array<int,4>> orderings = generate_ordering();
+	vector<vector<array<int,4>>> valid_orders;
+	for (int i=0;i<orderings.size();++i) {
+		for (int j=0;j<orderings.size();++j) {
+			for (int k=0; k<orderings.size();++k) {
+				for (int l=0;l<orderings.size();++l) {
+					vector<array<int,4>> valid_ordering = {orderings[i],orderings[j],orderings[k],orderings[l]};
+					if (get_result(test, valid_ordering)==126384) {
+						valid_orders.push_back(valid_ordering);
+					}
+				}
+			}
+		}
+	}
+	valid_orders.size();
+	return valid_orders;
+}
+
 int main () {
 	string filename;
 	cout << "Enter the filename:\n";
 	cin >> filename;
 	filename += ".txt";
 	vector<string> test = parse_file(filename);
-	long result1 = get_result(test);
-	cout << "Result 1: " << result1 << "\n";
+	vector<vector<array<int,4>>> valid_orders = valid_orderings(test);
+	//cout << "L4: \"" << "<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A" << "\"\n";
+	cout << "Result 1: " << valid_orders.size() << "\n";
+	if (valid_orders.size()>0) {
+		for (int i=0;i<valid_orders.size();++i) {
+			cout << "{\n";
+			for (int j=0;j<valid_orders[i].size();++j) {
+				cout << "(";
+				for (int k=0;k<valid_orders[i][j].size();++k) {
+					cout <<valid_orders[i][j][k] << ',';
+				}
+				cout << "),";
+			}
+		}
+	}
 	return 0;
 }
