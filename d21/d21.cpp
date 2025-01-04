@@ -1,7 +1,7 @@
 #include <functional>
 #include <array>
 #include <istream>
-#include <queue>
+#include <sstream>
 #include <string>
 #include <iostream>
 #include <deque>
@@ -12,45 +12,6 @@
 #include <cassert>
 
 using namespace std;
-
-enum class PadType {
-	NUMPAD,
-	DIRPAD
-};
-
-struct Pad {
-	PadType pad_t; 
-	vector<vector<char>> pad;
-	int y ;
-	int x ;
-	Pad *child;
-	string history;
-	Pad(PadType type, Pad *child_pad): pad_t(type), child(nullptr) {
-		if (pad_t == PadType::NUMPAD) {
-			pad = {{'7','8','9'},{'4','5','6'},{'1','2','3'},{'-','0','A'}};
-			y = 3;
-			x = 2;
-		}
-		else if (pad_t == PadType::DIRPAD) {
-			pad = {{'-','^','A'},{'<','v','>'}};
-			y = 0;
-			x = 2;
-		}
-	}
-	Pad(PadType type, Pad *child_pad, int y, int x, string history): pad_t(type), child(nullptr), y(y), x(x), history(history) {
-		if (pad_t == PadType::NUMPAD) {
-			pad = {{'7','8','9'},{'4','5','6'},{'1','2','3'},{'-','0','A'}};
-		}
-		else if (pad_t == PadType::DIRPAD) {
-			pad = {{'-','^','A'},{'<','v','>'}};
-		}
-	}
-	bool valid_pos(int y_,int x_) {
-		bool y_valid = (0<=y_ && y_<pad.size());
-		bool x_valid = (0<=x_ && x_<pad[0].size());
-		return ((pad[y_][x_]!= '-') && (y_valid && x_valid));
-	}
-};
 
 void sort_chars (string &s, array<int,4> priority_vec) {
 	unordered_map<char,int> priority = {{'<',priority_vec[0]},{'^',priority_vec[1]}, {'v',priority_vec[2]},{'>',priority_vec[3]}};
@@ -196,6 +157,53 @@ long get_result (vector<string> codes, vector<array<int,4>> priority_vec) {
 	return result;
 }
 
+struct pair_hash {
+    template <class T1, class T2>
+    size_t operator () (const pair<T1,T2>& p) const {
+        auto h1 = hash<T1>{}(p.first);
+        auto h2 = hash<T2>{}(p.second);
+        return h1 ^ (h2 << 1);
+    }
+};
+
+string process_depth_first(
+    const string& input,
+    int depth,
+    const unordered_map<string, string>& dirs_map,
+    unordered_map<pair<string, int>, string, pair_hash>& memo
+) {
+    // Base case: no more transformation needed
+    if (depth == 0) {
+        return input;
+    }
+
+    // Check the memo first
+    pair<string, int> key = {input, depth};
+    if (memo.contains(key)) {
+        return memo[key];
+    }
+
+    // Build the new transformed string
+    ostringstream oss;
+    string augmented = "A" + input;
+
+    // Transform each 2-character substring recursively
+    for (size_t i = 0; i < augmented.size() - 1; ++i) {
+        // Safe if guaranteed to be in dirs_map
+        const string& curr_substr = augmented.substr(i, 2);
+
+        // Get the mapped value and recurse
+        const string& mapped_val = dirs_map.at(curr_substr);
+        string transformed = process_depth_first(mapped_val, depth - 1, dirs_map, memo);
+        oss << transformed;
+    }
+
+    // Store in memo before returning
+    string result = oss.str();
+    memo[key] = result;
+    return result;
+}
+
 long get_result_p2 (vector<string> codes,int num_robots, vector<array<int,4>> priority_vec) {
 	long result=0;
 	unordered_map<string,string> dirs_map = dirpad_next(priority_vec[0]), nums_map = numpad_next(priority_vec[1]);
@@ -210,27 +218,10 @@ long get_result_p2 (vector<string> codes,int num_robots, vector<array<int,4>> pr
 			string num_to_dir = nums_map[num_substr];
 			l2+=nums_map[num_substr];
 		}
-		string l3;
-		for (int i=0;i<num_robots-1;++i){
-			l2 = "A"+l2;
-			for(long j=0;j<l2.size();++j) {
-				string num_substr = l2.substr(j,2);
-				string num_to_dir = dirs_map[num_substr];
-				l3+=dirs_map[num_substr];
-			}
-			l2=l3;
-			l3.clear();
-			cout << "completed level " << i <<" , current size: " << l2.size()<< '\n';
-		}
-		l2 = "A"+l2;
-		// you->robot2
-		string l4;
-		for (long i=0;i<l2.size()-1;++i){
-			string num_substr = l2.substr(i,2);
-			string num_to_dir = dirs_map[num_substr];
-			l4+=dirs_map[num_substr];
-		}
-		result += numeric_part*l4.size();
+		unordered_map<pair<string, int>, string, pair_hash> memo;
+		string final_result = process_depth_first(l2, num_robots , dirs_map, memo);
+		cout << final_result.size()<<'\n';
+		result += numeric_part * final_result.size();
 	}
 	return result;
 }
@@ -277,10 +268,9 @@ int main () {
 	filename += ".txt";
 	vector<string> test = parse_file(filename);
 	vector<vector<array<int,4>>> valid_orders = valid_orderings(test);
-	cout << "valid orders size: " << valid_orders.size() << "\n";
 	vector<array<int,4>> ordering = valid_orders[0];
 	vector<string> p1 = parse_file("d21.txt");
-	long result1 = get_result_p2(p1,25, ordering);
-	cout << "result p1: " << result1;
+	long result2 = get_result_p2(p1,25, ordering);
+	cout << "result p2: " << result2;
 	return 0;
 }

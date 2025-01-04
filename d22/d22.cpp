@@ -66,8 +66,8 @@ int get_result_p2 (vector<vector<int8_t>> prices_ts) {
 	for (auto prices:prices_ts) {
 		string sequence = "";
 		unordered_set<string> visited;
-		for (int i=1;i<=4;++i) sequence += to_string((prices[i]-prices[i-1]))+",";
-		for (int i=4; i<prices.size();++i) {
+		for (int i=1;i<5;++i) sequence += to_string((prices[i]-prices[i-1]))+",";
+		for (int i=5; i<prices.size();++i) {
 			// how to handle keys which have already appeared?
 			if (!visited.contains(sequence)) {
 				int price_curr = prices[i-1];
@@ -84,7 +84,7 @@ int get_result_p2 (vector<vector<int8_t>> prices_ts) {
 	cout << "Max_sequence: " << max_it->first << " ,Value: " << max_it->second << '\n';
 	return max_it->second;
 }
-
+//Note: 1923 is too low and 1929 is too high. Where am I going wrong?
 int main () {
 	long test = parse_file("d22t.txt").first;
 	assert(test==37327623);

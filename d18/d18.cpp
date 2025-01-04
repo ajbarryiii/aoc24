@@ -63,6 +63,7 @@ int get_result (vector<vector<int>> corruptions, const int dim, int start_time) 
 	return visited[{dim-1,dim-1}];
 }
 
+//HACK: optimize this using binary search
 pair<int,int> get_result_p2 (vector<vector<int>> corruptions, const int dim, int start_time) {
 	vector<vector<bool>> map(dim,vector<bool>(dim, true));
 	for(int i = 0; i<start_time; ++i) {
