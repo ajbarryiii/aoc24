@@ -198,7 +198,7 @@ unordered_map<string,TreeNode> get_result_tree_map (pair<unordered_map<string,Tr
 				map.insert({curr[2],TreeNode(curr[2], Operation::AND , &map.at(curr[0]), &map.at(curr[1]))});
 			}
 			else if (op == "OR") {
-				map.insert({curr[2],TreeNode(curr[2], Operation::XOR , &map.at(curr[0]), &map.at(curr[1]))});
+				map.insert({curr[2],TreeNode(curr[2], Operation::OR , &map.at(curr[0]), &map.at(curr[1]))});
 			}
 			else if (op == "XOR") {
 				map.insert({curr[2],TreeNode(curr[2], Operation::XOR , &map.at(curr[0]), &map.at(curr[1]))});
