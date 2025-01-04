@@ -262,7 +262,7 @@ void debug(pair<unordered_map<string,TreeNode>, deque<vector<string>>> input) {
 // tactic: find a precursor tree for each item 'z<num>' which is not valid.
 // another approach is to use a backtracking approach? start with z's which are incorrect, and 
 // what data structure can we use for the precursor set?
-vector<string> p2 (pair<unordered_map<string,TreeNode>, deque<vector<string>>> input) {
+void p2 (pair<unordered_map<string,TreeNode>, deque<vector<string>>> input) {
 	unordered_map<string,TreeNode> map = input.first;
 	long x = 0;
 	long y = 0;
@@ -296,67 +296,21 @@ vector<string> p2 (pair<unordered_map<string,TreeNode>, deque<vector<string>>> i
 		map.insert({z_max_idx,TreeNode(z_max_idx, Operation::PRESET_F)});
 	}
 	unordered_map<string,TreeNode> tree_map = get_result_tree_map(input);
-	//dfs to try and find the answer
-	vector<pair<pair<int,vector<string>>,pair<unordered_map<string,TreeNode>,unordered_set<string>>>> stack;// <<idx_z,num_swaps>,<map,not_to_swap_set>>
-	for (auto i:tree_map) {
-		if ((i.first!="z00") && i.second.get_value()==correct_z[0]) {
-			if (i.first!="z00") {
-				unordered_map<string,TreeNode> next_map = tree_map;
-				swap_trees(next_map, i.first, "z00");
-				unordered_set<string> next_not_to_swap = next_map.at("z00").get_components_subset();
-				vector<string> next_swaps = {"z00", i.first};
-				stack.push_back({{1,next_swaps},{next_map,next_not_to_swap}});
+	while (true) {
+		string to_check;
+		cout << "\ninput the node you want to check:\n";
+		cin >> to_check;
+		if (tree_map.contains(to_check)) {
+			if (to_check[0] == 'z') {
+				int integer_part = stoi(to_check.substr(1));
+				cout << "Correct value: " <<correct_z[integer_part] <<'\n';
 			}
-			else {
-				unordered_map<string,TreeNode> next_map = tree_map;
-				unordered_set<string> next_not_to_swap = next_map.at("z00").get_components_subset();
-				vector<string> next_swaps;
-				stack.push_back({{1,next_swaps},{next_map,next_not_to_swap}});
-			}
+			printTree(&tree_map.at(to_check));
+		}
+		else {
+			break;
 		}
 	}
-	cout << "stack size after initialization: " << stack.size() << '\n';
-	while(!stack.empty()) {
-		pair<pair<int,vector<string>>,pair<unordered_map<string,TreeNode>,unordered_set<string>>> curr = stack.back();
-		int idx = curr.first.first; 
-		vector<string> swaps = curr.first.second;
-		unordered_map<string,TreeNode> curr_map = curr.second.first;
-		unordered_set<string> curr_not_to_swap = curr.second.second;
-		stack.pop_back();
-		string z_str = "z";
-		if (idx<10) z_str+="0";
-		z_str+=to_string(idx);
-		//BUG: this only handles cases where the idx to be swapped is with the z string;
-		if (correct_z[idx]==curr_map.at(z_str).get_value()) {
-			if (idx==max_idx+1 && swaps.size()==8) {
-				return swaps;
-			}
-			else {
-				unordered_set<string> next_not_to_swap = curr_map.at(z_str).get_components_subset();
-				copy(curr_not_to_swap.begin(),curr_not_to_swap.end(), inserter(next_not_to_swap,next_not_to_swap.end()));
-				stack.push_back({{idx+1,swaps},{curr_map, next_not_to_swap}});
-			}
-		}
-		else if (swaps.size()<=6) { // case of correct_z[idx] being incorrect
-			for (auto key: curr_map) {
-				if (!curr_not_to_swap.contains(key.first) && key.first!=z_str) {
-					if (correct_z[idx]==key.second.get_value()) {
-						unordered_map<string,TreeNode> next_map = curr_map;
-						swap_trees(next_map, key.first, z_str);
-						unordered_set<string> next_not_to_swap = next_map.at(z_str).get_components_subset();
-						copy(curr_not_to_swap.begin(),curr_not_to_swap.end(), inserter(next_not_to_swap,next_not_to_swap.end()));
-						vector<string> next_swaps = swaps;
-						next_swaps.push_back(key.first);
-						next_swaps.push_back(z_str);
-						stack.push_back({{idx+1,next_swaps},{next_map,next_not_to_swap}});
-					}
-				}
-			}
-		}
-	}
-	cout << "result not found with this approach\n";
-	vector<string> void_vect;
-	return void_vect;
 }
 
 int main () {
@@ -365,7 +319,7 @@ int main () {
 	cout << "Result 1: " << result1 << '\n';
 	pair<unordered_map<string,TreeNode>, deque<vector<string>>> input_2 = parse_file_p2("d24.txt");
 	cout << "file parsed successfully for p2\n";
-	debug(input_2);
+	p2(input_2);
 	return 0;
 }
 
