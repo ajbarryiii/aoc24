@@ -221,7 +221,43 @@ void swap_trees (unordered_map<string,TreeNode> &map, string key1, string key2) 
 	map.at(key2).out = key2;
 }
 
+void printTree(TreeNode* root, string prefix = "", bool isLeft = true) {
+	if (!root) {
+		return;
+	}
 
+	cout << prefix;
+	cout << (isLeft ? "├──" : "└──");
+
+	// Print node information
+	cout << "Output: " << root->out << " | Op: ";
+	switch(root->operation) {
+		case Operation::PRESET_F: cout << "PRESET_F"; break;
+		case Operation::PRESET_T: cout << "PRESET_T"; break;
+		case Operation::XOR: cout << "XOR"; break;
+		case Operation::AND: cout << "AND"; break;
+		case Operation::OR: cout << "OR"; break;
+		default: cout << "UNKNOWN";
+	}
+	cout << " | Value: " << (root->get_value() ? "TRUE" : "FALSE") << endl;
+
+	// Print children
+	printTree(root->left_input, prefix + (isLeft ? "│   " : "    "), true);
+	printTree(root->right_input, prefix + (isLeft ? "│   " : "    "), false);
+}
+
+void debug(pair<unordered_map<string,TreeNode>, deque<vector<string>>> input) {
+	unordered_map<string,TreeNode> tree_map = get_result_tree_map(input);
+	while (true) {
+		string i;
+		cout << "Enter the item you want to debug\n";
+		cin >> i;
+		if (tree_map.contains(i)) printTree(&tree_map.at(i));
+		else {
+			break;
+		}
+	}
+}
 
 // tactic: find a precursor tree for each item 'z<num>' which is not valid.
 // another approach is to use a backtracking approach? start with z's which are incorrect, and 
@@ -329,10 +365,7 @@ int main () {
 	cout << "Result 1: " << result1 << '\n';
 	pair<unordered_map<string,TreeNode>, deque<vector<string>>> input_2 = parse_file_p2("d24.txt");
 	cout << "file parsed successfully for p2\n";
-	vector<string> swaps = p2(input_2);
-	for (auto i: swaps) {
-		cout << i << ',';
-	}
+	debug(input_2);
 	return 0;
 }
 
